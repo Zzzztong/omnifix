@@ -16,10 +16,6 @@ const STATUS_BADGE: Record<string, { dot: string; bg: string; text: string }> = 
   COMPLETED:   { dot: '#94A3B8', bg: '#F8FAFC', text: '#475569' },
   CANCELLED:   { dot: '#EF4444', bg: '#FEF2F2', text: '#991B1B' },
 }
-// Keep for backward compat in edit modal
-const STATUS_STYLE: Record<string, string> = {
-  PENDING: '', CONFIRMED: '', IN_PROGRESS: '', COMPLETED: '', CANCELLED: '',
-}
 const STATUS_LABEL: Record<string, string> = {
   PENDING: '待确认', CONFIRMED: '已确认', IN_PROGRESS: '服务中', COMPLETED: '已完成', CANCELLED: '已取消',
 }
@@ -115,7 +111,7 @@ function CustomerPicker({ customers, value, onSelect }: {
       {showNew && (
         <div className="border border-orange-200 bg-orange-50 rounded-xl p-3 mt-2 space-y-2">
           <div className="text-sm font-semibold text-orange-800 mb-1">快速创建新客户</div>
-          {[['姓名 *', 'name', '张先生 / Alice'], ['手机', 'phone', '(949) 555-0000'], ['微信号', 'wechat', '微信ID']].map(([lbl, key, ph]) => (
+          {[['姓名 *', 'name', '张先生 / Alice'], ['手机', 'phone', '(949) 555-0000'], ['微信号', 'wechat', '微信ID']].map(([_lbl, key, ph]) => (
             <input key={key} placeholder={ph}
               value={(newForm as any)[key]}
               onChange={e => setNewForm(f => ({ ...f, [key]: e.target.value }))}
