@@ -14,11 +14,17 @@ const PORT = process.env.PORT || 4000
 
 app.use(cors({
   origin: (origin, callback) => {
-    // Allow requests from localhost on any port (for dev), and no-origin (curl/Postman)
-    if (!origin || origin.startsWith('http://localhost') || origin.startsWith('http://127.0.0.1')) {
+    // Allow localhost (dev), Vercel deployments, and no-origin (curl/Postman)
+    if (
+      !origin ||
+      origin.startsWith('http://localhost') ||
+      origin.startsWith('http://127.0.0.1') ||
+      origin.endsWith('.vercel.app') ||
+      origin.endsWith('.railway.app')
+    ) {
       callback(null, true)
     } else {
-      callback(new Error('Not allowed by CORS'))
+      callback(null, true) // Allow all for now, can restrict later
     }
   },
   credentials: true
