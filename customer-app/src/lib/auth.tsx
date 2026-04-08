@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react'
+import { createContext, useContext, useState, useEffect, type ReactNode } from 'react'
 import { api } from './api'
 
 interface User {
@@ -9,6 +9,7 @@ interface User {
   referralCode: string
   credits: number
   role: string
+  createdAt?: string
 }
 
 interface AuthContextType {
