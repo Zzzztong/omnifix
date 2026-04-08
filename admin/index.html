@@ -1,0 +1,713 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FixNest Admin</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: { extend: { colors: { primary: { DEFAULT: '#1D4ED8', light: '#3B82F6', dark: '#1E3A8A' }, accent: { DEFAULT: '#F97316' } } } }
+    }
+  </script>
+  <style>
+    * { box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #F1F5F9; }
+    .sidebar { width: 240px; min-height: 100vh; background: #0F172A; position: fixed; left: 0; top: 0; bottom: 0; z-index: 50; transition: transform 0.3s; }
+    .main { margin-left: 240px; min-height: 100vh; }
+    .nav-item { display: flex; align-items: center; gap: 10px; padding: 10px 16px; border-radius: 10px; cursor: pointer; color: #94A3B8; font-size: 14px; font-weight: 500; transition: all 0.15s; }
+    .nav-item:hover { background: rgba(255,255,255,0.06); color: #E2E8F0; }
+    .nav-item.active { background: #1D4ED8; color: white; }
+    .page { display: none; }
+    .page.active { display: block; }
+    .card { background: white; border-radius: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
+    .stat-card { background: white; border-radius: 16px; padding: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
+    .badge { display: inline-flex; align-items: center; padding: 2px 10px; border-radius: 20px; font-size: 12px; font-weight: 500; }
+    .badge-pending { background: #FEF3C7; color: #92400E; }
+    .badge-confirmed { background: #DCFCE7; color: #166534; }
+    .badge-completed { background: #DBEAFE; color: #1E40AF; }
+    .badge-cancelled { background: #FEE2E2; color: #991B1B; }
+    .badge-active { background: #DCFCE7; color: #166534; }
+    .badge-inactive { background: #F3F4F6; color: #6B7280; }
+    table { width: 100%; border-collapse: collapse; }
+    th { text-align: left; padding: 12px 16px; font-size: 12px; font-weight: 600; color: #6B7280; text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 1px solid #F1F5F9; background: #F9FAFB; }
+    td { padding: 14px 16px; font-size: 14px; color: #374151; border-bottom: 1px solid #F9FAFB; }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: #FAFAFA; }
+    input, select, textarea { outline: none; border: 1.5px solid #E5E7EB; border-radius: 10px; padding: 9px 14px; font-size: 14px; width: 100%; transition: border-color 0.2s; }
+    input:focus, select:focus, textarea:focus { border-color: #1D4ED8; }
+    .btn { border: none; cursor: pointer; border-radius: 10px; padding: 9px 18px; font-size: 14px; font-weight: 600; transition: all 0.15s; }
+    .btn-primary { background: #1D4ED8; color: white; }
+    .btn-primary:hover { background: #1E3A8A; }
+    .btn-danger { background: #FEE2E2; color: #DC2626; }
+    .btn-sm { padding: 5px 12px; font-size: 12px; border-radius: 8px; }
+    .btn-ghost { background: #F1F5F9; color: #374151; }
+    .btn-ghost:hover { background: #E2E8F0; }
+    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 200; display: flex; align-items: center; justify-content: center; }
+    .modal { background: white; border-radius: 20px; padding: 28px; width: 480px; max-width: calc(100vw - 32px); max-height: 90vh; overflow-y: auto; }
+    ::-webkit-scrollbar { width: 6px; } ::-webkit-scrollbar-track { background: #F1F5F9; } ::-webkit-scrollbar-thumb { background: #CBD5E1; border-radius: 3px; }
+    @media (max-width: 768px) { .sidebar { transform: translateX(-100%); } .main { margin-left: 0; } .sidebar.open { transform: translateX(0); } }
+  </style>
+</head>
+<body>
+
+<!-- Sidebar -->
+<div class="sidebar" id="sidebar">
+  <div class="p-5 border-b border-white border-opacity-10">
+    <div class="flex items-center gap-3">
+      <div class="w-9 h-9 bg-blue-600 rounded-xl flex items-center justify-center text-white font-bold text-lg">F</div>
+      <div>
+        <div class="text-white font-bold text-base">FixNest</div>
+        <div class="text-slate-400 text-xs">Admin Panel</div>
+      </div>
+    </div>
+  </div>
+  <div class="p-3 flex flex-col gap-1 mt-2">
+    <div class="nav-item active" onclick="goTo('dashboard')" id="nav-dashboard">
+      <span>📊</span> Dashboard
+    </div>
+    <div class="nav-item" onclick="goTo('services')" id="nav-services">
+      <span>🔧</span> Services
+    </div>
+    <div class="nav-item" onclick="goTo('orders')" id="nav-orders">
+      <span>📋</span> Orders
+    </div>
+    <div class="nav-item" onclick="goTo('customers')" id="nav-customers">
+      <span>👥</span> Customers
+    </div>
+    <div class="nav-item" onclick="goTo('technicians')" id="nav-technicians">
+      <span>👨‍🔧</span> Technicians
+    </div>
+    <div class="nav-item" onclick="goTo('coupons')" id="nav-coupons">
+      <span>🎟️</span> Coupons
+    </div>
+    <div class="nav-item" onclick="goTo('reviews')" id="nav-reviews">
+      <span>⭐</span> Reviews
+    </div>
+  </div>
+  <div class="absolute bottom-0 left-0 right-0 p-4 border-t border-white border-opacity-10">
+    <div class="flex items-center gap-3">
+      <div class="w-8 h-8 bg-slate-600 rounded-full flex items-center justify-center text-white text-sm">A</div>
+      <div>
+        <div class="text-white text-sm font-medium">Admin User</div>
+        <div class="text-slate-400 text-xs">admin@fixnest.com</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Main Content -->
+<div class="main">
+  <!-- Top Bar -->
+  <div class="bg-white border-b border-gray-100 px-6 py-4 flex items-center justify-between sticky top-0 z-40">
+    <div class="flex items-center gap-3">
+      <button onclick="toggleSidebar()" class="md:hidden text-gray-500">☰</button>
+      <div id="page-title" class="font-bold text-gray-800 text-lg">Dashboard</div>
+    </div>
+    <div class="flex items-center gap-3">
+      <div class="relative">
+        <input type="text" placeholder="Search..." class="pl-9 pr-4 py-2 text-sm w-48" style="width:200px" />
+        <span class="absolute left-3 top-2.5 text-gray-400 text-sm">🔍</span>
+      </div>
+      <div class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center text-sm cursor-pointer">🔔</div>
+    </div>
+  </div>
+
+  <div class="p-6">
+
+<!-- ═══════════════════════════════════════ DASHBOARD ═══════════════════════════════════════ -->
+<div id="page-dashboard" class="page active">
+  <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+    <div class="stat-card">
+      <div class="flex items-center justify-between mb-3">
+        <div class="text-gray-500 text-sm">Total Orders</div>
+        <div class="w-10 h-10 bg-blue-50 rounded-xl flex items-center justify-center">📋</div>
+      </div>
+      <div class="font-bold text-2xl text-gray-800">1,248</div>
+      <div class="text-green-500 text-xs mt-1">↑ 12% this month</div>
+    </div>
+    <div class="stat-card">
+      <div class="flex items-center justify-between mb-3">
+        <div class="text-gray-500 text-sm">Revenue</div>
+        <div class="w-10 h-10 bg-green-50 rounded-xl flex items-center justify-center">💰</div>
+      </div>
+      <div class="font-bold text-2xl text-gray-800">$48,320</div>
+      <div class="text-green-500 text-xs mt-1">↑ 8% this month</div>
+    </div>
+    <div class="stat-card">
+      <div class="flex items-center justify-between mb-3">
+        <div class="text-gray-500 text-sm">Customers</div>
+        <div class="w-10 h-10 bg-purple-50 rounded-xl flex items-center justify-center">👥</div>
+      </div>
+      <div class="font-bold text-2xl text-gray-800">876</div>
+      <div class="text-green-500 text-xs mt-1">↑ 24 new this week</div>
+    </div>
+    <div class="stat-card">
+      <div class="flex items-center justify-between mb-3">
+        <div class="text-gray-500 text-sm">Technicians</div>
+        <div class="w-10 h-10 bg-orange-50 rounded-xl flex items-center justify-center">👨‍🔧</div>
+      </div>
+      <div class="font-bold text-2xl text-gray-800">42</div>
+      <div class="text-gray-400 text-xs mt-1">38 active today</div>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+    <!-- Recent Orders -->
+    <div class="lg:col-span-2 card overflow-hidden">
+      <div class="px-5 py-4 border-b border-gray-50 flex items-center justify-between">
+        <div class="font-semibold text-gray-800">Recent Orders</div>
+        <button onclick="goTo('orders')" class="text-primary text-sm">View all →</button>
+      </div>
+      <table>
+        <thead><tr><th>Order</th><th>Service</th><th>Customer</th><th>Status</th><th>Amount</th></tr></thead>
+        <tbody>
+          <tr><td class="font-medium">#ORD-1248</td><td>Leaky Faucet Repair</td><td>John Smith</td><td><span class="badge badge-pending">Pending</span></td><td class="font-semibold">$89</td></tr>
+          <tr><td class="font-medium">#ORD-1247</td><td>AC Tune-Up</td><td>Emily Chen</td><td><span class="badge badge-confirmed">Confirmed</span></td><td class="font-semibold">$99</td></tr>
+          <tr><td class="font-medium">#ORD-1246</td><td>TV Mounting</td><td>Robert Kim</td><td><span class="badge badge-completed">Completed</span></td><td class="font-semibold">$89</td></tr>
+          <tr><td class="font-medium">#ORD-1245</td><td>Electrical Outlet</td><td>Sarah Johnson</td><td><span class="badge badge-completed">Completed</span></td><td class="font-semibold">$79</td></tr>
+          <tr><td class="font-medium">#ORD-1244</td><td>Lawn Mowing</td><td>David Lee</td><td><span class="badge badge-cancelled">Cancelled</span></td><td class="font-semibold">$65</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Top Services -->
+    <div class="card overflow-hidden">
+      <div class="px-5 py-4 border-b border-gray-50">
+        <div class="font-semibold text-gray-800">Top Services</div>
+      </div>
+      <div class="p-4 flex flex-col gap-3">
+        <div class="flex items-center gap-3">
+          <div class="w-8 h-8 bg-blue-50 rounded-lg flex items-center justify-center text-sm">🔧</div>
+          <div class="flex-1"><div class="text-sm font-medium text-gray-700">Plumbing</div><div class="w-full bg-gray-100 rounded-full h-1.5 mt-1"><div class="bg-blue-500 h-1.5 rounded-full" style="width:82%"></div></div></div>
+          <div class="text-sm font-bold text-gray-700">312</div>
+        </div>
+        <div class="flex items-center gap-3">
+          <div class="w-8 h-8 bg-yellow-50 rounded-lg flex items-center justify-center text-sm">⚡</div>
+          <div class="flex-1"><div class="text-sm font-medium text-gray-700">Electrical</div><div class="w-full bg-gray-100 rounded-full h-1.5 mt-1"><div class="bg-yellow-500 h-1.5 rounded-full" style="width:65%"></div></div></div>
+          <div class="text-sm font-bold text-gray-700">248</div>
+        </div>
+        <div class="flex items-center gap-3">
+          <div class="w-8 h-8 bg-cyan-50 rounded-lg flex items-center justify-center text-sm">❄️</div>
+          <div class="flex-1"><div class="text-sm font-medium text-gray-700">HVAC</div><div class="w-full bg-gray-100 rounded-full h-1.5 mt-1"><div class="bg-cyan-500 h-1.5 rounded-full" style="width:55%"></div></div></div>
+          <div class="text-sm font-bold text-gray-700">210</div>
+        </div>
+        <div class="flex items-center gap-3">
+          <div class="w-8 h-8 bg-purple-50 rounded-lg flex items-center justify-center text-sm">🔨</div>
+          <div class="flex-1"><div class="text-sm font-medium text-gray-700">Handyman</div><div class="w-full bg-gray-100 rounded-full h-1.5 mt-1"><div class="bg-purple-500 h-1.5 rounded-full" style="width:44%"></div></div></div>
+          <div class="text-sm font-bold text-gray-700">168</div>
+        </div>
+        <div class="flex items-center gap-3">
+          <div class="w-8 h-8 bg-green-50 rounded-lg flex items-center justify-center text-sm">🧹</div>
+          <div class="flex-1"><div class="text-sm font-medium text-gray-700">Cleaning</div><div class="w-full bg-gray-100 rounded-full h-1.5 mt-1"><div class="bg-green-500 h-1.5 rounded-full" style="width:38%"></div></div></div>
+          <div class="text-sm font-bold text-gray-700">144</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════ SERVICES PAGE ═══════════════════════════════════════ -->
+<div id="page-services" class="page">
+  <div class="flex items-center justify-between mb-5">
+    <div class="flex gap-2">
+      <button onclick="setServiceTab('categories')" id="svc-tab-cat" class="btn btn-primary btn-sm">Categories</button>
+      <button onclick="setServiceTab('items')" id="svc-tab-items" class="btn btn-ghost btn-sm">Service Items</button>
+    </div>
+    <button onclick="openAddServiceModal()" class="btn btn-primary">+ Add New</button>
+  </div>
+
+  <!-- Categories Tab -->
+  <div id="svc-categories" class="card overflow-hidden">
+    <table>
+      <thead><tr><th>Category</th><th>Icon</th><th>Services</th><th>Status</th><th>Actions</th></tr></thead>
+      <tbody id="cat-table-body">
+        <tr><td><div class="font-medium">Plumbing</div></td><td>🔧</td><td>6</td><td><span class="badge badge-active">Active</span></td><td><div class="flex gap-2"><button class="btn btn-ghost btn-sm">Edit</button><button class="btn btn-danger btn-sm">Delete</button></div></td></tr>
+        <tr><td><div class="font-medium">Electrical</div></td><td>⚡</td><td>6</td><td><span class="badge badge-active">Active</span></td><td><div class="flex gap-2"><button class="btn btn-ghost btn-sm">Edit</button><button class="btn btn-danger btn-sm">Delete</button></div></td></tr>
+        <tr><td><div class="font-medium">HVAC</div></td><td>❄️</td><td>6</td><td><span class="badge badge-active">Active</span></td><td><div class="flex gap-2"><button class="btn btn-ghost btn-sm">Edit</button><button class="btn btn-danger btn-sm">Delete</button></div></td></tr>
+        <tr><td><div class="font-medium">Roofing</div></td><td>🏠</td><td>5</td><td><span class="badge badge-active">Active</span></td><td><div class="flex gap-2"><button class="btn btn-ghost btn-sm">Edit</button><button class="btn btn-danger btn-sm">Delete</button></div></td></tr>
+        <tr><td><div class="font-medium">Carpentry</div></td><td>🪵</td><td>5</td><td><span class="badge badge-active">Active</span></td><td><div class="flex gap-2"><button class="btn btn-ghost btn-sm">Edit</button><button class="btn btn-danger btn-sm">Delete</button></div></td></tr>
+        <tr><td><div class="font-medium">Painting</div></td><td>🎨</td><td>4</td><td><span class="badge badge-active">Active</span></td><td><div class="flex gap-2"><button class="btn btn-ghost btn-sm">Edit</button><button class="btn btn-danger btn-sm">Delete</button></div></td></tr>
+        <tr><td><div class="font-medium">Appliances</div></td><td>🏡</td><td>5</td><td><span class="badge badge-active">Active</span></td><td><div class="flex gap-2"><button class="btn btn-ghost btn-sm">Edit</button><button class="btn btn-danger btn-sm">Delete</button></div></td></tr>
+        <tr><td><div class="font-medium">Handyman</div></td><td>🔨</td><td>6</td><td><span class="badge badge-active">Active</span></td><td><div class="flex gap-2"><button class="btn btn-ghost btn-sm">Edit</button><button class="btn btn-danger btn-sm">Delete</button></div></td></tr>
+        <tr><td><div class="font-medium">Landscaping</div></td><td>🌿</td><td>5</td><td><span class="badge badge-active">Active</span></td><td><div class="flex gap-2"><button class="btn btn-ghost btn-sm">Edit</button><button class="btn btn-danger btn-sm">Delete</button></div></td></tr>
+        <tr><td><div class="font-medium">Cleaning</div></td><td>🧹</td><td>5</td><td><span class="badge badge-inactive">Inactive</span></td><td><div class="flex gap-2"><button class="btn btn-ghost btn-sm">Edit</button><button class="btn btn-danger btn-sm">Delete</button></div></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Items Tab -->
+  <div id="svc-items" class="card overflow-hidden" style="display:none">
+    <div class="px-4 py-3 border-b border-gray-50 flex gap-3">
+      <select style="width:200px">
+        <option>All Categories</option>
+        <option>Plumbing</option>
+        <option>Electrical</option>
+        <option>HVAC</option>
+      </select>
+    </div>
+    <table>
+      <thead><tr><th>Service Name</th><th>Category</th><th>Price</th><th>Duration</th><th>Popular</th><th>Status</th><th>Actions</th></tr></thead>
+      <tbody>
+        <tr><td class="font-medium">Leaky Faucet Repair</td><td>Plumbing</td><td class="font-semibold">$89</td><td>1-2 hrs</td><td>✅</td><td><span class="badge badge-active">Active</span></td><td><div class="flex gap-2"><button class="btn btn-ghost btn-sm">Edit</button><button class="btn btn-danger btn-sm">Del</button></div></td></tr>
+        <tr><td class="font-medium">Drain Cleaning</td><td>Plumbing</td><td class="font-semibold">$149</td><td>1-3 hrs</td><td></td><td><span class="badge badge-active">Active</span></td><td><div class="flex gap-2"><button class="btn btn-ghost btn-sm">Edit</button><button class="btn btn-danger btn-sm">Del</button></div></td></tr>
+        <tr><td class="font-medium">Outlet / Switch Repair</td><td>Electrical</td><td class="font-semibold">$79</td><td>1 hr</td><td></td><td><span class="badge badge-active">Active</span></td><td><div class="flex gap-2"><button class="btn btn-ghost btn-sm">Edit</button><button class="btn btn-danger btn-sm">Del</button></div></td></tr>
+        <tr><td class="font-medium">EV Charger Install</td><td>Electrical</td><td class="font-semibold">$599</td><td>3-6 hrs</td><td>✅</td><td><span class="badge badge-active">Active</span></td><td><div class="flex gap-2"><button class="btn btn-ghost btn-sm">Edit</button><button class="btn btn-danger btn-sm">Del</button></div></td></tr>
+        <tr><td class="font-medium">AC Tune-Up</td><td>HVAC</td><td class="font-semibold">$99</td><td>1-2 hrs</td><td>✅</td><td><span class="badge badge-active">Active</span></td><td><div class="flex gap-2"><button class="btn btn-ghost btn-sm">Edit</button><button class="btn btn-danger btn-sm">Del</button></div></td></tr>
+        <tr><td class="font-medium">TV Mounting</td><td>Handyman</td><td class="font-semibold">$89</td><td>1-2 hrs</td><td>✅</td><td><span class="badge badge-active">Active</span></td><td><div class="flex gap-2"><button class="btn btn-ghost btn-sm">Edit</button><button class="btn btn-danger btn-sm">Del</button></div></td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════ ORDERS PAGE ═══════════════════════════════════════ -->
+<div id="page-orders" class="page">
+  <div class="flex items-center justify-between mb-5">
+    <div class="flex gap-2 flex-wrap">
+      <button onclick="filterOrdersAdmin('all')" id="otab-all" class="btn btn-primary btn-sm">All</button>
+      <button onclick="filterOrdersAdmin('pending')" id="otab-pending" class="btn btn-ghost btn-sm">Pending</button>
+      <button onclick="filterOrdersAdmin('confirmed')" id="otab-confirmed" class="btn btn-ghost btn-sm">Confirmed</button>
+      <button onclick="filterOrdersAdmin('completed')" id="otab-completed" class="btn btn-ghost btn-sm">Completed</button>
+      <button onclick="filterOrdersAdmin('cancelled')" id="otab-cancelled" class="btn btn-ghost btn-sm">Cancelled</button>
+    </div>
+    <button class="btn btn-ghost btn-sm">⬇ Export</button>
+  </div>
+  <div class="card overflow-hidden">
+    <table>
+      <thead><tr><th>Order ID</th><th>Service</th><th>Customer</th><th>Technician</th><th>Date</th><th>Amount</th><th>Status</th><th>Actions</th></tr></thead>
+      <tbody id="admin-orders-table">
+        <tr><td class="font-medium text-primary">#ORD-1248</td><td>Leaky Faucet Repair</td><td>John Smith</td><td>Mike R.</td><td>Mar 20, 10:00 AM</td><td class="font-semibold">$89</td><td><span class="badge badge-pending">Pending</span></td><td><div class="flex gap-1"><button class="btn btn-ghost btn-sm" onclick="changeStatus(this,'confirmed')">✓ Confirm</button><button class="btn btn-danger btn-sm" onclick="changeStatus(this,'cancelled')">✗</button></div></td></tr>
+        <tr><td class="font-medium text-primary">#ORD-1247</td><td>AC Tune-Up</td><td>Emily Chen</td><td>Sarah K.</td><td>Mar 19, 2:00 PM</td><td class="font-semibold">$99</td><td><span class="badge badge-confirmed">Confirmed</span></td><td><div class="flex gap-1"><button class="btn btn-ghost btn-sm" onclick="changeStatus(this,'completed')">✓ Done</button></div></td></tr>
+        <tr><td class="font-medium text-primary">#ORD-1246</td><td>TV Mounting</td><td>Robert Kim</td><td>James L.</td><td>Mar 18, 11:00 AM</td><td class="font-semibold">$89</td><td><span class="badge badge-completed">Completed</span></td><td><div class="flex gap-1"><button class="btn btn-ghost btn-sm">View</button></div></td></tr>
+        <tr><td class="font-medium text-primary">#ORD-1245</td><td>Outlet Repair</td><td>Sarah Johnson</td><td>Tom W.</td><td>Mar 17, 9:00 AM</td><td class="font-semibold">$79</td><td><span class="badge badge-completed">Completed</span></td><td><div class="flex gap-1"><button class="btn btn-ghost btn-sm">View</button></div></td></tr>
+        <tr><td class="font-medium text-primary">#ORD-1244</td><td>Lawn Mowing</td><td>David Lee</td><td>—</td><td>Mar 16, 1:00 PM</td><td class="font-semibold">$65</td><td><span class="badge badge-cancelled">Cancelled</span></td><td><div class="flex gap-1"><button class="btn btn-ghost btn-sm">View</button></div></td></tr>
+        <tr><td class="font-medium text-primary">#ORD-1243</td><td>Drain Cleaning</td><td>Lisa Wang</td><td>Mike R.</td><td>Mar 15, 3:00 PM</td><td class="font-semibold">$149</td><td><span class="badge badge-completed">Completed</span></td><td><div class="flex gap-1"><button class="btn btn-ghost btn-sm">View</button></div></td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════ CUSTOMERS PAGE ═══════════════════════════════════════ -->
+<div id="page-customers" class="page">
+  <div class="flex items-center justify-between mb-5">
+    <input type="text" placeholder="Search customers..." style="width:280px" />
+    <button class="btn btn-ghost btn-sm">⬇ Export</button>
+  </div>
+  <div class="card overflow-hidden">
+    <table>
+      <thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Orders</th><th>Spent</th><th>Referrals</th><th>Joined</th><th>Status</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><div class="flex items-center gap-2"><div class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center text-sm">JS</div><span class="font-medium">John Smith</span></div></td>
+          <td class="text-gray-500">john@example.com</td><td>(415) 555-0123</td><td>3</td><td class="font-semibold">$287</td><td>2</td><td class="text-gray-400">Jan 2024</td><td><span class="badge badge-active">Active</span></td>
+        </tr>
+        <tr>
+          <td><div class="flex items-center gap-2"><div class="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center text-sm">EC</div><span class="font-medium">Emily Chen</span></div></td>
+          <td class="text-gray-500">emily@example.com</td><td>(415) 555-0456</td><td>5</td><td class="font-semibold">$562</td><td>5</td><td class="text-gray-400">Oct 2023</td><td><span class="badge badge-active">Active</span></td>
+        </tr>
+        <tr>
+          <td><div class="flex items-center gap-2"><div class="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center text-sm">RK</div><span class="font-medium">Robert Kim</span></div></td>
+          <td class="text-gray-500">robert@example.com</td><td>(415) 555-0789</td><td>2</td><td class="font-semibold">$178</td><td>0</td><td class="text-gray-400">Feb 2024</td><td><span class="badge badge-active">Active</span></td>
+        </tr>
+        <tr>
+          <td><div class="flex items-center gap-2"><div class="w-8 h-8 bg-red-100 rounded-full flex items-center justify-center text-sm">SJ</div><span class="font-medium">Sarah Johnson</span></div></td>
+          <td class="text-gray-500">sarah@example.com</td><td>(415) 555-0321</td><td>7</td><td class="font-semibold">$891</td><td>3</td><td class="text-gray-400">Aug 2023</td><td><span class="badge badge-active">Active</span></td>
+        </tr>
+        <tr>
+          <td><div class="flex items-center gap-2"><div class="w-8 h-8 bg-yellow-100 rounded-full flex items-center justify-center text-sm">DL</div><span class="font-medium">David Lee</span></div></td>
+          <td class="text-gray-500">david@example.com</td><td>(415) 555-0654</td><td>1</td><td class="font-semibold">$0</td><td>0</td><td class="text-gray-400">Mar 2024</td><td><span class="badge badge-inactive">Inactive</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════ TECHNICIANS PAGE ═══════════════════════════════════════ -->
+<div id="page-technicians" class="page">
+  <div class="flex items-center justify-between mb-5">
+    <input type="text" placeholder="Search technicians..." style="width:280px" />
+    <button onclick="openAddTechModal()" class="btn btn-primary">+ Add Technician</button>
+  </div>
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+    <div class="card p-5">
+      <div class="flex items-start justify-between mb-4">
+        <div class="flex items-center gap-3">
+          <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center text-xl font-bold text-blue-600">MR</div>
+          <div><div class="font-semibold text-gray-800">Mike Rodriguez</div><div class="text-gray-500 text-xs">Plumbing, Handyman</div></div>
+        </div>
+        <span class="badge badge-active">Active</span>
+      </div>
+      <div class="grid grid-cols-3 gap-2 text-center mb-4">
+        <div class="bg-gray-50 rounded-xl p-2"><div class="font-bold text-gray-800">128</div><div class="text-xs text-gray-500">Jobs</div></div>
+        <div class="bg-gray-50 rounded-xl p-2"><div class="font-bold text-gray-800">4.9</div><div class="text-xs text-gray-500">Rating</div></div>
+        <div class="bg-gray-50 rounded-xl p-2"><div class="font-bold text-gray-800">98%</div><div class="text-xs text-gray-500">Complete</div></div>
+      </div>
+      <div class="text-xs text-gray-500 mb-3">📞 (415) 555-1001 · San Francisco, CA</div>
+      <div class="flex gap-2"><button class="btn btn-ghost btn-sm flex-1">Edit</button><button class="btn btn-primary btn-sm flex-1">Assign Job</button></div>
+    </div>
+    <div class="card p-5">
+      <div class="flex items-start justify-between mb-4">
+        <div class="flex items-center gap-3">
+          <div class="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center text-xl font-bold text-purple-600">SK</div>
+          <div><div class="font-semibold text-gray-800">Sarah Kim</div><div class="text-gray-500 text-xs">HVAC, Electrical</div></div>
+        </div>
+        <span class="badge badge-active">Active</span>
+      </div>
+      <div class="grid grid-cols-3 gap-2 text-center mb-4">
+        <div class="bg-gray-50 rounded-xl p-2"><div class="font-bold text-gray-800">95</div><div class="text-xs text-gray-500">Jobs</div></div>
+        <div class="bg-gray-50 rounded-xl p-2"><div class="font-bold text-gray-800">4.8</div><div class="text-xs text-gray-500">Rating</div></div>
+        <div class="bg-gray-50 rounded-xl p-2"><div class="font-bold text-gray-800">96%</div><div class="text-xs text-gray-500">Complete</div></div>
+      </div>
+      <div class="text-xs text-gray-500 mb-3">📞 (415) 555-1002 · Oakland, CA</div>
+      <div class="flex gap-2"><button class="btn btn-ghost btn-sm flex-1">Edit</button><button class="btn btn-primary btn-sm flex-1">Assign Job</button></div>
+    </div>
+    <div class="card p-5">
+      <div class="flex items-start justify-between mb-4">
+        <div class="flex items-center gap-3">
+          <div class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center text-xl font-bold text-green-600">JL</div>
+          <div><div class="font-semibold text-gray-800">James Liu</div><div class="text-gray-500 text-xs">Carpentry, Painting</div></div>
+        </div>
+        <span class="badge badge-active">Active</span>
+      </div>
+      <div class="grid grid-cols-3 gap-2 text-center mb-4">
+        <div class="bg-gray-50 rounded-xl p-2"><div class="font-bold text-gray-800">72</div><div class="text-xs text-gray-500">Jobs</div></div>
+        <div class="bg-gray-50 rounded-xl p-2"><div class="font-bold text-gray-800">4.7</div><div class="text-xs text-gray-500">Rating</div></div>
+        <div class="bg-gray-50 rounded-xl p-2"><div class="font-bold text-gray-800">94%</div><div class="text-xs text-gray-500">Complete</div></div>
+      </div>
+      <div class="text-xs text-gray-500 mb-3">📞 (415) 555-1003 · San Jose, CA</div>
+      <div class="flex gap-2"><button class="btn btn-ghost btn-sm flex-1">Edit</button><button class="btn btn-primary btn-sm flex-1">Assign Job</button></div>
+    </div>
+    <div class="card p-5">
+      <div class="flex items-start justify-between mb-4">
+        <div class="flex items-center gap-3">
+          <div class="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center text-xl font-bold text-orange-600">TW</div>
+          <div><div class="font-semibold text-gray-800">Tom Wilson</div><div class="text-gray-500 text-xs">Electrical, Handyman</div></div>
+        </div>
+        <span class="badge badge-inactive">Off Duty</span>
+      </div>
+      <div class="grid grid-cols-3 gap-2 text-center mb-4">
+        <div class="bg-gray-50 rounded-xl p-2"><div class="font-bold text-gray-800">54</div><div class="text-xs text-gray-500">Jobs</div></div>
+        <div class="bg-gray-50 rounded-xl p-2"><div class="font-bold text-gray-800">4.6</div><div class="text-xs text-gray-500">Rating</div></div>
+        <div class="bg-gray-50 rounded-xl p-2"><div class="font-bold text-gray-800">91%</div><div class="text-xs text-gray-500">Complete</div></div>
+      </div>
+      <div class="text-xs text-gray-500 mb-3">📞 (415) 555-1004 · Fremont, CA</div>
+      <div class="flex gap-2"><button class="btn btn-ghost btn-sm flex-1">Edit</button><button class="btn btn-primary btn-sm flex-1">Assign Job</button></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════ COUPONS PAGE ═══════════════════════════════════════ -->
+<div id="page-coupons" class="page">
+  <div class="flex items-center justify-between mb-5">
+    <div class="text-gray-500 text-sm">Manage discount coupons and promotions</div>
+    <button onclick="openAddCouponModal()" class="btn btn-primary">+ Create Coupon</button>
+  </div>
+  <!-- Stats -->
+  <div class="grid grid-cols-3 gap-4 mb-5">
+    <div class="stat-card"><div class="text-gray-500 text-sm mb-1">Active Coupons</div><div class="font-bold text-2xl">8</div></div>
+    <div class="stat-card"><div class="text-gray-500 text-sm mb-1">Total Redemptions</div><div class="font-bold text-2xl">342</div></div>
+    <div class="stat-card"><div class="text-gray-500 text-sm mb-1">Total Discount Given</div><div class="font-bold text-2xl text-red-500">$6,840</div></div>
+  </div>
+  <div class="card overflow-hidden">
+    <table>
+      <thead><tr><th>Code</th><th>Type</th><th>Discount</th><th>Used / Limit</th><th>Expires</th><th>Status</th><th>Actions</th></tr></thead>
+      <tbody>
+        <tr><td class="font-mono font-bold text-primary">NEW30</td><td>New User</td><td class="font-semibold text-green-600">$30 off</td><td>234 / ∞</td><td>Dec 31, 2025</td><td><span class="badge badge-active">Active</span></td><td><div class="flex gap-2"><button class="btn btn-ghost btn-sm">Edit</button><button class="btn btn-danger btn-sm">Stop</button></div></td></tr>
+        <tr><td class="font-mono font-bold text-primary">SAVE20</td><td>General</td><td class="font-semibold text-green-600">$20 off</td><td>88 / 200</td><td>Jun 30, 2025</td><td><span class="badge badge-active">Active</span></td><td><div class="flex gap-2"><button class="btn btn-ghost btn-sm">Edit</button><button class="btn btn-danger btn-sm">Stop</button></div></td></tr>
+        <tr><td class="font-mono font-bold text-primary">FIXNEST10</td><td>General</td><td class="font-semibold text-green-600">$10 off</td><td>12 / 100</td><td>Apr 30, 2025</td><td><span class="badge badge-active">Active</span></td><td><div class="flex gap-2"><button class="btn btn-ghost btn-sm">Edit</button><button class="btn btn-danger btn-sm">Stop</button></div></td></tr>
+        <tr><td class="font-mono font-bold text-gray-400">SPRING25</td><td>Seasonal</td><td class="font-semibold text-gray-400">25% off</td><td>45 / 50</td><td>Mar 31, 2025</td><td><span class="badge badge-inactive">Expired</span></td><td><div class="flex gap-2"><button class="btn btn-ghost btn-sm">View</button></div></td></tr>
+        <tr><td class="font-mono font-bold text-gray-400">REFER20</td><td>Referral</td><td class="font-semibold text-gray-400">$20 off</td><td>8 / ∞</td><td>—</td><td><span class="badge badge-inactive">Paused</span></td><td><div class="flex gap-2"><button class="btn btn-primary btn-sm">Resume</button></div></td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════ REVIEWS PAGE ═══════════════════════════════════════ -->
+<div id="page-reviews" class="page">
+  <div class="grid grid-cols-3 gap-4 mb-5">
+    <div class="stat-card text-center">
+      <div class="text-4xl font-bold text-gray-800 mb-1">4.8</div>
+      <div class="text-yellow-400 text-xl mb-1">★★★★★</div>
+      <div class="text-gray-500 text-sm">Overall Rating</div>
+    </div>
+    <div class="stat-card"><div class="text-gray-500 text-sm mb-3">Rating Breakdown</div>
+      <div class="flex flex-col gap-1.5 text-sm">
+        <div class="flex items-center gap-2"><span class="w-4">5★</span><div class="flex-1 bg-gray-100 rounded-full h-2"><div class="bg-yellow-400 h-2 rounded-full" style="width:72%"></div></div><span class="text-gray-500">72%</span></div>
+        <div class="flex items-center gap-2"><span class="w-4">4★</span><div class="flex-1 bg-gray-100 rounded-full h-2"><div class="bg-yellow-400 h-2 rounded-full" style="width:20%"></div></div><span class="text-gray-500">20%</span></div>
+        <div class="flex items-center gap-2"><span class="w-4">3★</span><div class="flex-1 bg-gray-100 rounded-full h-2"><div class="bg-yellow-400 h-2 rounded-full" style="width:5%"></div></div><span class="text-gray-500">5%</span></div>
+        <div class="flex items-center gap-2"><span class="w-4">2★</span><div class="flex-1 bg-gray-100 rounded-full h-2"><div class="bg-yellow-400 h-2 rounded-full" style="width:2%"></div></div><span class="text-gray-500">2%</span></div>
+        <div class="flex items-center gap-2"><span class="w-4">1★</span><div class="flex-1 bg-gray-100 rounded-full h-2"><div class="bg-yellow-400 h-2 rounded-full" style="width:1%"></div></div><span class="text-gray-500">1%</span></div>
+      </div>
+    </div>
+    <div class="stat-card"><div class="text-gray-500 text-sm mb-1">Total Reviews</div><div class="font-bold text-2xl">1,024</div><div class="text-green-500 text-xs mt-1">↑ 48 this month</div></div>
+  </div>
+  <div class="card overflow-hidden">
+    <div class="px-5 py-4 border-b border-gray-50 font-semibold text-gray-800">Recent Reviews</div>
+    <div class="divide-y divide-gray-50">
+      <div class="p-5">
+        <div class="flex items-start justify-between mb-2">
+          <div class="flex items-center gap-3">
+            <div class="w-9 h-9 bg-blue-100 rounded-full flex items-center justify-center text-sm font-bold text-blue-600">JS</div>
+            <div><div class="font-medium text-gray-800">John Smith</div><div class="text-gray-400 text-xs">Leaky Faucet Repair · Mike R. · Mar 15</div></div>
+          </div>
+          <div class="text-yellow-400">★★★★★</div>
+        </div>
+        <p class="text-gray-600 text-sm">Mike was fantastic! He arrived on time, fixed the faucet quickly, and cleaned up after himself. Will definitely book again.</p>
+      </div>
+      <div class="p-5">
+        <div class="flex items-start justify-between mb-2">
+          <div class="flex items-center gap-3">
+            <div class="w-9 h-9 bg-purple-100 rounded-full flex items-center justify-center text-sm font-bold text-purple-600">EC</div>
+            <div><div class="font-medium text-gray-800">Emily Chen</div><div class="text-gray-400 text-xs">AC Tune-Up · Sarah K. · Mar 12</div></div>
+          </div>
+          <div class="text-yellow-400">★★★★<span class="text-gray-200">★</span></div>
+        </div>
+        <p class="text-gray-600 text-sm">Great service overall. Sarah explained what she was doing and gave helpful tips for maintaining the AC. Minor delay on arrival but she called ahead.</p>
+      </div>
+      <div class="p-5">
+        <div class="flex items-start justify-between mb-2">
+          <div class="flex items-center gap-3">
+            <div class="w-9 h-9 bg-green-100 rounded-full flex items-center justify-center text-sm font-bold text-green-600">RK</div>
+            <div><div class="font-medium text-gray-800">Robert Kim</div><div class="text-gray-400 text-xs">TV Mounting · James L. · Mar 10</div></div>
+          </div>
+          <div class="text-yellow-400">★★★★★</div>
+        </div>
+        <p class="text-gray-600 text-sm">Excellent work! James mounted our 75" TV perfectly level and hid all the cables. Very professional and efficient.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+  </div><!-- end p-6 -->
+</div><!-- end main -->
+
+<!-- ═══════════════════════════════════════ MODALS ═══════════════════════════════════════ -->
+<!-- Add Service Modal -->
+<div id="modal-service" class="modal-overlay" style="display:none" onclick="closeModal('modal-service')">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="flex items-center justify-between mb-5">
+      <div class="font-bold text-gray-800 text-lg">Add New Service</div>
+      <button onclick="closeModal('modal-service')" class="text-gray-400 hover:text-gray-600 text-xl">✕</button>
+    </div>
+    <div class="flex flex-col gap-3">
+      <div>
+        <label class="text-sm font-medium text-gray-700 block mb-1">Service Name *</label>
+        <input type="text" placeholder="e.g. Water Heater Repair" />
+      </div>
+      <div>
+        <label class="text-sm font-medium text-gray-700 block mb-1">Category *</label>
+        <select>
+          <option>Select Category...</option>
+          <option>Plumbing</option>
+          <option>Electrical</option>
+          <option>HVAC</option>
+          <option>Roofing</option>
+          <option>Carpentry</option>
+          <option>Painting</option>
+          <option>Appliances</option>
+          <option>Handyman</option>
+          <option>Landscaping</option>
+          <option>Cleaning</option>
+        </select>
+      </div>
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="text-sm font-medium text-gray-700 block mb-1">Price ($) *</label>
+          <input type="number" placeholder="e.g. 149" />
+        </div>
+        <div>
+          <label class="text-sm font-medium text-gray-700 block mb-1">Duration</label>
+          <input type="text" placeholder="e.g. 1-2 hrs" />
+        </div>
+      </div>
+      <div>
+        <label class="text-sm font-medium text-gray-700 block mb-1">Description</label>
+        <textarea rows="3" placeholder="Describe what this service includes..."></textarea>
+      </div>
+      <div class="flex items-center gap-2">
+        <input type="checkbox" id="popular-check" class="w-4 h-4 accent-blue-600" />
+        <label for="popular-check" class="text-sm text-gray-700">Mark as Popular</label>
+      </div>
+    </div>
+    <div class="flex gap-3 mt-6">
+      <button onclick="closeModal('modal-service')" class="btn btn-ghost flex-1">Cancel</button>
+      <button onclick="saveService()" class="btn btn-primary flex-1">Save Service</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add Coupon Modal -->
+<div id="modal-coupon" class="modal-overlay" style="display:none" onclick="closeModal('modal-coupon')">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="flex items-center justify-between mb-5">
+      <div class="font-bold text-gray-800 text-lg">Create Coupon</div>
+      <button onclick="closeModal('modal-coupon')" class="text-gray-400 text-xl">✕</button>
+    </div>
+    <div class="flex flex-col gap-3">
+      <div>
+        <label class="text-sm font-medium text-gray-700 block mb-1">Coupon Code *</label>
+        <input type="text" placeholder="e.g. SUMMER25" style="text-transform:uppercase" />
+      </div>
+      <div>
+        <label class="text-sm font-medium text-gray-700 block mb-1">Coupon Type</label>
+        <select>
+          <option>New User Only</option>
+          <option>General</option>
+          <option>Referral</option>
+          <option>Seasonal</option>
+        </select>
+      </div>
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="text-sm font-medium text-gray-700 block mb-1">Discount Type</label>
+          <select>
+            <option>Fixed Amount ($)</option>
+            <option>Percentage (%)</option>
+          </select>
+        </div>
+        <div>
+          <label class="text-sm font-medium text-gray-700 block mb-1">Discount Value *</label>
+          <input type="number" placeholder="e.g. 20" />
+        </div>
+      </div>
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="text-sm font-medium text-gray-700 block mb-1">Usage Limit</label>
+          <input type="number" placeholder="Leave blank for unlimited" />
+        </div>
+        <div>
+          <label class="text-sm font-medium text-gray-700 block mb-1">Expiry Date</label>
+          <input type="date" />
+        </div>
+      </div>
+      <div>
+        <label class="text-sm font-medium text-gray-700 block mb-1">Min. Order Amount ($)</label>
+        <input type="number" placeholder="0 = no minimum" />
+      </div>
+    </div>
+    <div class="flex gap-3 mt-6">
+      <button onclick="closeModal('modal-coupon')" class="btn btn-ghost flex-1">Cancel</button>
+      <button onclick="saveCoupon()" class="btn btn-primary flex-1">Create Coupon</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add Technician Modal -->
+<div id="modal-tech" class="modal-overlay" style="display:none" onclick="closeModal('modal-tech')">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="flex items-center justify-between mb-5">
+      <div class="font-bold text-gray-800 text-lg">Add Technician</div>
+      <button onclick="closeModal('modal-tech')" class="text-gray-400 text-xl">✕</button>
+    </div>
+    <div class="flex flex-col gap-3">
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="text-sm font-medium text-gray-700 block mb-1">First Name *</label>
+          <input type="text" placeholder="John" />
+        </div>
+        <div>
+          <label class="text-sm font-medium text-gray-700 block mb-1">Last Name *</label>
+          <input type="text" placeholder="Smith" />
+        </div>
+      </div>
+      <div>
+        <label class="text-sm font-medium text-gray-700 block mb-1">Email *</label>
+        <input type="email" placeholder="john@fixnest.com" />
+      </div>
+      <div>
+        <label class="text-sm font-medium text-gray-700 block mb-1">Phone *</label>
+        <input type="tel" placeholder="(415) 555-0000" />
+      </div>
+      <div>
+        <label class="text-sm font-medium text-gray-700 block mb-1">Specialties</label>
+        <div class="grid grid-cols-2 gap-2 mt-1">
+          <label class="flex items-center gap-2 text-sm"><input type="checkbox" class="accent-blue-600" /> Plumbing</label>
+          <label class="flex items-center gap-2 text-sm"><input type="checkbox" class="accent-blue-600" /> Electrical</label>
+          <label class="flex items-center gap-2 text-sm"><input type="checkbox" class="accent-blue-600" /> HVAC</label>
+          <label class="flex items-center gap-2 text-sm"><input type="checkbox" class="accent-blue-600" /> Carpentry</label>
+          <label class="flex items-center gap-2 text-sm"><input type="checkbox" class="accent-blue-600" /> Handyman</label>
+          <label class="flex items-center gap-2 text-sm"><input type="checkbox" class="accent-blue-600" /> Painting</label>
+        </div>
+      </div>
+      <div>
+        <label class="text-sm font-medium text-gray-700 block mb-1">Service Area (City)</label>
+        <input type="text" placeholder="San Francisco, CA" />
+      </div>
+    </div>
+    <div class="flex gap-3 mt-6">
+      <button onclick="closeModal('modal-tech')" class="btn btn-ghost flex-1">Cancel</button>
+      <button onclick="saveTech()" class="btn btn-primary flex-1">Add Technician</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// Navigation
+function goTo(page) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('page-' + page).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('nav-' + page).classList.add('active');
+  const titles = { dashboard: 'Dashboard', services: 'Services', orders: 'Orders', customers: 'Customers', technicians: 'Technicians', coupons: 'Coupons', reviews: 'Reviews' };
+  document.getElementById('page-title').textContent = titles[page] || page;
+}
+
+function toggleSidebar() {
+  document.getElementById('sidebar').classList.toggle('open');
+}
+
+// Service tab toggle
+function setServiceTab(tab) {
+  if (tab === 'categories') {
+    document.getElementById('svc-categories').style.display = 'block';
+    document.getElementById('svc-items').style.display = 'none';
+    document.getElementById('svc-tab-cat').className = 'btn btn-primary btn-sm';
+    document.getElementById('svc-tab-items').className = 'btn btn-ghost btn-sm';
+  } else {
+    document.getElementById('svc-categories').style.display = 'none';
+    document.getElementById('svc-items').style.display = 'block';
+    document.getElementById('svc-tab-cat').className = 'btn btn-ghost btn-sm';
+    document.getElementById('svc-tab-items').className = 'btn btn-primary btn-sm';
+  }
+}
+
+// Order status filter
+function filterOrdersAdmin(filter) {
+  ['all','pending','confirmed','completed','cancelled'].forEach(f => {
+    document.getElementById('otab-' + f).className = f === filter ? 'btn btn-primary btn-sm' : 'btn btn-ghost btn-sm';
+  });
+}
+
+// Status change
+function changeStatus(btn, newStatus) {
+  const row = btn.closest('tr');
+  const statusCell = row.querySelector('.badge');
+  const statusMap = { confirmed: ['badge-confirmed', 'Confirmed'], completed: ['badge-completed', 'Completed'], cancelled: ['badge-cancelled', 'Cancelled'] };
+  if (statusMap[newStatus]) {
+    statusCell.className = 'badge ' + statusMap[newStatus][0];
+    statusCell.textContent = statusMap[newStatus][1];
+    btn.closest('td').innerHTML = '<div class="flex gap-1"><button class="btn btn-ghost btn-sm">View</button></div>';
+  }
+}
+
+// Modals
+function openAddServiceModal() { document.getElementById('modal-service').style.display = 'flex'; }
+function openAddCouponModal() { document.getElementById('modal-coupon').style.display = 'flex'; }
+function openAddTechModal()   { document.getElementById('modal-tech').style.display = 'flex'; }
+function closeModal(id)       { document.getElementById(id).style.display = 'none'; }
+
+function saveService() {
+  alert('✅ Service saved successfully!');
+  closeModal('modal-service');
+}
+function saveCoupon() {
+  alert('✅ Coupon created successfully!');
+  closeModal('modal-coupon');
+}
+function saveTech() {
+  alert('✅ Technician added successfully!');
+  closeModal('modal-tech');
+}
+</script>
+</body>
+</html>

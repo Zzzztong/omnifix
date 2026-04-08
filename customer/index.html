@@ -1,0 +1,962 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+  <meta name="theme-color" content="#1D4ED8" />
+  <title>FixNest - Home Repair Services</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: { DEFAULT: '#1D4ED8', light: '#3B82F6', dark: '#1E3A8A' },
+            accent:  { DEFAULT: '#F97316', light: '#FB923C' },
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #F3F4F6; max-width: 430px; margin: 0 auto; min-height: 100vh; position: relative; }
+    .page { display: none; flex-direction: column; min-height: 100vh; }
+    .page.active { display: flex; }
+    .bottom-nav { position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 430px; background: white; border-top: 1px solid #E5E7EB; z-index: 100; padding-bottom: env(safe-area-inset-bottom); }
+    .content { flex: 1; overflow-y: auto; padding-bottom: 72px; }
+    .btn-primary { background: #1D4ED8; color: white; border-radius: 12px; padding: 14px 24px; font-weight: 600; font-size: 16px; width: 100%; border: none; cursor: pointer; transition: all 0.2s; }
+    .btn-primary:active { background: #1E3A8A; transform: scale(0.98); }
+    .btn-accent { background: #F97316; color: white; border-radius: 12px; padding: 14px 24px; font-weight: 600; font-size: 16px; width: 100%; border: none; cursor: pointer; }
+    .card { background: white; border-radius: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+    .tag { display: inline-block; background: #EFF6FF; color: #1D4ED8; border-radius: 20px; padding: 3px 10px; font-size: 12px; font-weight: 500; }
+    .status-pending { background: #FEF3C7; color: #92400E; }
+    .status-confirmed { background: #DCFCE7; color: #166534; }
+    .status-completed { background: #F0FDF4; color: #15803D; }
+    .status-cancelled { background: #FEE2E2; color: #991B1B; }
+    input, select, textarea { outline: none; }
+    .step-active { background: #1D4ED8; color: white; }
+    .step-done { background: #DCFCE7; color: #166534; }
+    .step-inactive { background: #F3F4F6; color: #9CA3AF; }
+    ::-webkit-scrollbar { display: none; }
+    .animate-pulse-once { animation: pulse 0.3s ease; }
+    @keyframes pulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.05)} }
+    .slide-up { animation: slideUp 0.3s ease; }
+    @keyframes slideUp { from{transform:translateY(20px);opacity:0} to{transform:translateY(0);opacity:1} }
+  </style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════ HOME PAGE ═══════════════════════════════════════ -->
+<div id="page-home" class="page active">
+  <div class="content">
+    <!-- Header -->
+    <div style="background:linear-gradient(135deg,#1D4ED8 0%,#3B82F6 100%)" class="px-4 pt-12 pb-8">
+      <div class="flex items-center justify-between mb-4">
+        <div>
+          <div class="text-blue-200 text-sm mb-1">📍 San Francisco, CA</div>
+          <div class="text-white font-bold text-xl">Good morning! 👋</div>
+        </div>
+        <div onclick="goTo('profile')" class="w-10 h-10 bg-white bg-opacity-20 rounded-full flex items-center justify-center cursor-pointer">
+          <span class="text-white text-lg">👤</span>
+        </div>
+      </div>
+      <!-- Search Bar -->
+      <div class="bg-white rounded-2xl flex items-center px-4 py-3 gap-3">
+        <span class="text-gray-400">🔍</span>
+        <input type="text" placeholder="Search services..." class="flex-1 text-gray-700 text-sm border-none" style="background:transparent" />
+      </div>
+    </div>
+
+    <!-- Promo Banner -->
+    <div class="px-4 mt-4">
+      <div style="background:linear-gradient(135deg,#F97316,#EF4444)" class="rounded-2xl p-4 flex items-center justify-between">
+        <div>
+          <div class="text-white font-bold text-lg">New User Offer!</div>
+          <div class="text-orange-100 text-sm">Get $30 off your first booking</div>
+          <button onclick="goTo('categories')" class="mt-2 bg-white text-orange-500 rounded-full px-4 py-1 text-sm font-semibold">Book Now</button>
+        </div>
+        <div class="text-5xl">🏠</div>
+      </div>
+    </div>
+
+    <!-- Categories -->
+    <div class="px-4 mt-6">
+      <div class="flex items-center justify-between mb-3">
+        <div class="font-bold text-gray-800 text-lg">Our Services</div>
+        <div onclick="goTo('categories')" class="text-primary text-sm cursor-pointer">See all →</div>
+      </div>
+      <div class="grid grid-cols-4 gap-3" id="home-categories"></div>
+    </div>
+
+    <!-- How It Works -->
+    <div class="px-4 mt-6">
+      <div class="font-bold text-gray-800 text-lg mb-3">How It Works</div>
+      <div class="card p-4">
+        <div class="flex flex-col gap-4">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center text-lg flex-shrink-0">1️⃣</div>
+            <div>
+              <div class="font-semibold text-gray-800 text-sm">Choose a Service</div>
+              <div class="text-gray-500 text-xs">Browse categories and pick what you need</div>
+            </div>
+          </div>
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center text-lg flex-shrink-0">2️⃣</div>
+            <div>
+              <div class="font-semibold text-gray-800 text-sm">Book a Time Slot</div>
+              <div class="text-gray-500 text-xs">Pick a date and time that works for you</div>
+            </div>
+          </div>
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center text-lg flex-shrink-0">3️⃣</div>
+            <div>
+              <div class="font-semibold text-gray-800 text-sm">Expert Arrives</div>
+              <div class="text-gray-500 text-xs">Certified technician comes to your home</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Recent Orders (if any) -->
+    <div class="px-4 mt-6 mb-4" id="recent-orders-section" style="display:none">
+      <div class="flex items-center justify-between mb-3">
+        <div class="font-bold text-gray-800 text-lg">Recent Orders</div>
+        <div onclick="goTo('orders')" class="text-primary text-sm cursor-pointer">View all →</div>
+      </div>
+      <div id="recent-orders-list"></div>
+    </div>
+
+    <!-- Referral Banner -->
+    <div class="px-4 mt-4 mb-4">
+      <div class="card p-4 border-2 border-dashed border-blue-200">
+        <div class="flex items-center gap-3">
+          <div class="text-3xl">🎁</div>
+          <div class="flex-1">
+            <div class="font-semibold text-gray-800 text-sm">Refer a Friend, Earn $20</div>
+            <div class="text-gray-500 text-xs">Share your referral code and earn rewards</div>
+          </div>
+          <button onclick="goTo('profile')" class="bg-primary text-white rounded-full px-3 py-1 text-xs font-semibold">Share</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- Bottom Nav -->
+  <div class="bottom-nav">
+    <div class="flex">
+      <div onclick="goTo('home')" class="flex-1 flex flex-col items-center py-2 cursor-pointer text-primary">
+        <span class="text-xl">🏠</span><span class="text-xs font-medium mt-0.5">Home</span>
+      </div>
+      <div onclick="goTo('categories')" class="flex-1 flex flex-col items-center py-2 cursor-pointer text-gray-400">
+        <span class="text-xl">🔧</span><span class="text-xs mt-0.5">Services</span>
+      </div>
+      <div onclick="goTo('orders')" class="flex-1 flex flex-col items-center py-2 cursor-pointer text-gray-400">
+        <span class="text-xl">📋</span><span class="text-xs mt-0.5">Orders</span>
+      </div>
+      <div onclick="goTo('profile')" class="flex-1 flex flex-col items-center py-2 cursor-pointer text-gray-400">
+        <span class="text-xl">👤</span><span class="text-xs mt-0.5">Profile</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════ CATEGORIES PAGE ═══════════════════════════════════════ -->
+<div id="page-categories" class="page">
+  <div class="content">
+    <div class="bg-white px-4 pt-12 pb-4 sticky top-0 z-10 border-b border-gray-100">
+      <div class="flex items-center gap-3">
+        <div onclick="goTo('home')" class="cursor-pointer text-gray-600">←</div>
+        <div class="font-bold text-gray-800 text-lg">All Services</div>
+      </div>
+    </div>
+    <div class="px-4 py-4" id="categories-grid"></div>
+  </div>
+  <div class="bottom-nav">
+    <div class="flex">
+      <div onclick="goTo('home')" class="flex-1 flex flex-col items-center py-2 cursor-pointer text-gray-400">
+        <span class="text-xl">🏠</span><span class="text-xs mt-0.5">Home</span>
+      </div>
+      <div onclick="goTo('categories')" class="flex-1 flex flex-col items-center py-2 cursor-pointer text-primary">
+        <span class="text-xl">🔧</span><span class="text-xs font-medium mt-0.5">Services</span>
+      </div>
+      <div onclick="goTo('orders')" class="flex-1 flex flex-col items-center py-2 cursor-pointer text-gray-400">
+        <span class="text-xl">📋</span><span class="text-xs mt-0.5">Orders</span>
+      </div>
+      <div onclick="goTo('profile')" class="flex-1 flex flex-col items-center py-2 cursor-pointer text-gray-400">
+        <span class="text-xl">👤</span><span class="text-xs mt-0.5">Profile</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════ CATEGORY DETAIL PAGE ═══════════════════════════════════════ -->
+<div id="page-category-detail" class="page">
+  <div class="content">
+    <div id="category-detail-header" class="px-4 pt-12 pb-6">
+      <div class="flex items-center gap-3 mb-4">
+        <div onclick="goTo('categories')" class="cursor-pointer text-white opacity-80">←</div>
+        <div id="cat-detail-title" class="font-bold text-white text-lg"></div>
+      </div>
+      <div id="cat-detail-desc" class="text-white text-sm opacity-90"></div>
+    </div>
+    <div class="px-4 -mt-3">
+      <div id="services-list" class="flex flex-col gap-3"></div>
+    </div>
+  </div>
+  <div class="bottom-nav">
+    <div class="flex">
+      <div onclick="goTo('home')" class="flex-1 flex flex-col items-center py-2 cursor-pointer text-gray-400">
+        <span class="text-xl">🏠</span><span class="text-xs mt-0.5">Home</span>
+      </div>
+      <div onclick="goTo('categories')" class="flex-1 flex flex-col items-center py-2 cursor-pointer text-primary">
+        <span class="text-xl">🔧</span><span class="text-xs font-medium mt-0.5">Services</span>
+      </div>
+      <div onclick="goTo('orders')" class="flex-1 flex flex-col items-center py-2 cursor-pointer text-gray-400">
+        <span class="text-xl">📋</span><span class="text-xs mt-0.5">Orders</span>
+      </div>
+      <div onclick="goTo('profile')" class="flex-1 flex flex-col items-center py-2 cursor-pointer text-gray-400">
+        <span class="text-xl">👤</span><span class="text-xs mt-0.5">Profile</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════ BOOKING PAGE ═══════════════════════════════════════ -->
+<div id="page-booking" class="page">
+  <div class="content">
+    <div class="bg-white px-4 pt-12 pb-4 border-b border-gray-100">
+      <div class="flex items-center gap-3 mb-4">
+        <div id="booking-back" class="cursor-pointer text-gray-600 text-lg">←</div>
+        <div class="font-bold text-gray-800 text-lg">Book Service</div>
+      </div>
+      <!-- Steps -->
+      <div class="flex items-center gap-2">
+        <div id="step1-indicator" class="flex items-center gap-1.5">
+          <div class="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold step-active">1</div>
+          <span class="text-xs font-medium text-primary">Date & Time</span>
+        </div>
+        <div class="flex-1 h-0.5 bg-gray-200"></div>
+        <div id="step2-indicator" class="flex items-center gap-1.5">
+          <div class="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold step-inactive" id="step2-circle">2</div>
+          <span class="text-xs text-gray-400" id="step2-label">Address</span>
+        </div>
+        <div class="flex-1 h-0.5 bg-gray-200"></div>
+        <div id="step3-indicator" class="flex items-center gap-1.5">
+          <div class="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold step-inactive" id="step3-circle">3</div>
+          <span class="text-xs text-gray-400" id="step3-label">Confirm</span>
+        </div>
+      </div>
+    </div>
+    <!-- Service Summary -->
+    <div class="px-4 mt-4" id="booking-service-summary"></div>
+    <!-- Step Content -->
+    <div class="px-4 mt-4">
+      <!-- Step 1: Date & Time -->
+      <div id="booking-step1">
+        <div class="font-semibold text-gray-800 mb-3">Select Date</div>
+        <div class="flex gap-2 overflow-x-auto pb-2" id="date-picker"></div>
+        <div class="font-semibold text-gray-800 mt-4 mb-3">Select Time</div>
+        <div class="grid grid-cols-3 gap-2" id="time-picker"></div>
+        <button class="btn-primary mt-6" onclick="nextStep()">Continue →</button>
+      </div>
+      <!-- Step 2: Address -->
+      <div id="booking-step2" style="display:none">
+        <div class="font-semibold text-gray-800 mb-3">Service Address</div>
+        <div class="flex flex-col gap-3">
+          <input type="text" id="addr-street" placeholder="Street Address" class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm" />
+          <div class="flex gap-2">
+            <input type="text" id="addr-city" placeholder="City" class="flex-1 border border-gray-200 rounded-xl px-4 py-3 text-sm" />
+            <input type="text" id="addr-state" placeholder="State" class="w-20 border border-gray-200 rounded-xl px-4 py-3 text-sm" value="CA" />
+          </div>
+          <input type="text" id="addr-zip" placeholder="ZIP Code" class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm" />
+          <textarea id="addr-notes" placeholder="Special instructions (optional)" rows="3" class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm resize-none"></textarea>
+        </div>
+        <div class="font-semibold text-gray-800 mt-4 mb-3">Contact Info</div>
+        <div class="flex flex-col gap-3">
+          <input type="text" id="contact-name" placeholder="Full Name" class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm" value="John Smith" />
+          <input type="tel" id="contact-phone" placeholder="Phone Number" class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm" value="+1 (415) 555-0123" />
+        </div>
+        <button class="btn-primary mt-6" onclick="nextStep()">Continue →</button>
+      </div>
+      <!-- Step 3: Confirm -->
+      <div id="booking-step3" style="display:none">
+        <div class="card p-4 mb-4">
+          <div class="font-semibold text-gray-800 mb-3">Order Summary</div>
+          <div id="confirm-summary"></div>
+        </div>
+        <!-- Coupon -->
+        <div class="card p-4 mb-4">
+          <div class="font-semibold text-gray-800 mb-2">Apply Coupon</div>
+          <div class="flex gap-2">
+            <input type="text" id="coupon-input" placeholder="Enter coupon code" class="flex-1 border border-gray-200 rounded-xl px-4 py-2 text-sm" />
+            <button onclick="applyCoupon()" class="bg-primary text-white rounded-xl px-4 py-2 text-sm font-medium">Apply</button>
+          </div>
+          <div id="coupon-msg" class="text-sm mt-2" style="display:none"></div>
+        </div>
+        <!-- Payment -->
+        <div class="card p-4 mb-4">
+          <div class="font-semibold text-gray-800 mb-2">Payment Method</div>
+          <div class="flex flex-col gap-2">
+            <label class="flex items-center gap-3 cursor-pointer">
+              <input type="radio" name="payment" value="card" checked class="accent-primary" />
+              <span class="text-sm">💳 Credit / Debit Card</span>
+            </label>
+            <label class="flex items-center gap-3 cursor-pointer">
+              <input type="radio" name="payment" value="apple" class="accent-primary" />
+              <span class="text-sm">🍎 Apple Pay</span>
+            </label>
+            <label class="flex items-center gap-3 cursor-pointer">
+              <input type="radio" name="payment" value="paypal" class="accent-primary" />
+              <span class="text-sm">🅿️ PayPal</span>
+            </label>
+          </div>
+        </div>
+        <div id="price-summary" class="card p-4 mb-6"></div>
+        <button class="btn-accent" onclick="confirmBooking()">✅ Confirm Booking</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════ ORDER SUCCESS PAGE ═══════════════════════════════════════ -->
+<div id="page-success" class="page">
+  <div class="content flex flex-col items-center justify-center px-6 text-center" style="min-height: calc(100vh - 72px);">
+    <div class="text-8xl mb-6 animate-bounce">✅</div>
+    <div class="font-bold text-gray-800 text-2xl mb-2">Booking Confirmed!</div>
+    <div class="text-gray-500 text-sm mb-6">Your technician will arrive at the scheduled time. You'll receive a confirmation email shortly.</div>
+    <div class="card p-4 w-full mb-6" id="success-summary"></div>
+    <button class="btn-primary mb-3" onclick="goTo('orders')">View My Orders</button>
+    <button onclick="goTo('home')" class="text-primary font-medium text-sm">Back to Home</button>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════ ORDERS PAGE ═══════════════════════════════════════ -->
+<div id="page-orders" class="page">
+  <div class="content">
+    <div class="bg-white px-4 pt-12 pb-4 border-b border-gray-100">
+      <div class="font-bold text-gray-800 text-xl">My Orders</div>
+    </div>
+    <!-- Tabs -->
+    <div class="bg-white px-4 pb-3 flex gap-2 overflow-x-auto">
+      <button onclick="filterOrders('all')" id="tab-all" class="px-4 py-1.5 rounded-full text-sm font-medium bg-primary text-white whitespace-nowrap">All</button>
+      <button onclick="filterOrders('pending')" id="tab-pending" class="px-4 py-1.5 rounded-full text-sm font-medium bg-gray-100 text-gray-600 whitespace-nowrap">Pending</button>
+      <button onclick="filterOrders('confirmed')" id="tab-confirmed" class="px-4 py-1.5 rounded-full text-sm font-medium bg-gray-100 text-gray-600 whitespace-nowrap">Confirmed</button>
+      <button onclick="filterOrders('completed')" id="tab-completed" class="px-4 py-1.5 rounded-full text-sm font-medium bg-gray-100 text-gray-600 whitespace-nowrap">Completed</button>
+    </div>
+    <div class="px-4 py-4" id="orders-list"></div>
+  </div>
+  <div class="bottom-nav">
+    <div class="flex">
+      <div onclick="goTo('home')" class="flex-1 flex flex-col items-center py-2 cursor-pointer text-gray-400">
+        <span class="text-xl">🏠</span><span class="text-xs mt-0.5">Home</span>
+      </div>
+      <div onclick="goTo('categories')" class="flex-1 flex flex-col items-center py-2 cursor-pointer text-gray-400">
+        <span class="text-xl">🔧</span><span class="text-xs mt-0.5">Services</span>
+      </div>
+      <div onclick="goTo('orders')" class="flex-1 flex flex-col items-center py-2 cursor-pointer text-primary">
+        <span class="text-xl">📋</span><span class="text-xs font-medium mt-0.5">Orders</span>
+      </div>
+      <div onclick="goTo('profile')" class="flex-1 flex flex-col items-center py-2 cursor-pointer text-gray-400">
+        <span class="text-xl">👤</span><span class="text-xs mt-0.5">Profile</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════ PROFILE PAGE ═══════════════════════════════════════ -->
+<div id="page-profile" class="page">
+  <div class="content">
+    <div style="background:linear-gradient(135deg,#1D4ED8,#3B82F6)" class="px-4 pt-12 pb-8">
+      <div class="flex items-center gap-4">
+        <div class="w-16 h-16 bg-white bg-opacity-20 rounded-full flex items-center justify-center text-3xl">👤</div>
+        <div>
+          <div class="text-white font-bold text-lg">John Smith</div>
+          <div class="text-blue-200 text-sm">john@example.com</div>
+          <div class="text-blue-200 text-xs mt-1">Member since Jan 2024</div>
+        </div>
+      </div>
+    </div>
+    <div class="px-4 py-4 flex flex-col gap-3">
+      <!-- Stats -->
+      <div class="grid grid-cols-3 gap-3">
+        <div class="card p-3 text-center">
+          <div class="font-bold text-gray-800 text-xl" id="stat-orders">0</div>
+          <div class="text-gray-500 text-xs">Orders</div>
+        </div>
+        <div class="card p-3 text-center">
+          <div class="font-bold text-gray-800 text-xl">$20</div>
+          <div class="text-gray-500 text-xs">Credits</div>
+        </div>
+        <div class="card p-3 text-center">
+          <div class="font-bold text-gray-800 text-xl">2</div>
+          <div class="text-gray-500 text-xs">Referrals</div>
+        </div>
+      </div>
+      <!-- Referral -->
+      <div class="card p-4">
+        <div class="font-semibold text-gray-800 mb-2">🎁 My Referral Code</div>
+        <div class="flex items-center gap-2 bg-blue-50 rounded-xl p-3">
+          <div class="font-mono font-bold text-primary text-lg flex-1">FIXNEST-JS2024</div>
+          <button onclick="copyReferral()" class="bg-primary text-white rounded-lg px-3 py-1 text-xs font-medium">Copy</button>
+        </div>
+        <div class="text-gray-500 text-xs mt-2">Share this code. You earn $20 when a friend books their first service!</div>
+      </div>
+      <!-- Coupons -->
+      <div class="card p-4">
+        <div class="font-semibold text-gray-800 mb-3">🎟️ My Coupons</div>
+        <div class="flex flex-col gap-2">
+          <div class="flex items-center justify-between bg-orange-50 border border-orange-200 rounded-xl p-3">
+            <div>
+              <div class="font-bold text-orange-600">NEW30</div>
+              <div class="text-xs text-gray-500">$30 off first booking</div>
+            </div>
+            <div class="text-orange-500 font-bold">-$30</div>
+          </div>
+          <div class="flex items-center justify-between bg-gray-50 border border-gray-200 rounded-xl p-3 opacity-50">
+            <div>
+              <div class="font-bold text-gray-600">SAVE10</div>
+              <div class="text-xs text-gray-500">10% off — Expired</div>
+            </div>
+            <div class="text-gray-400 font-bold">10%</div>
+          </div>
+        </div>
+      </div>
+      <!-- Menu Items -->
+      <div class="card overflow-hidden">
+        <div class="flex flex-col">
+          <div class="flex items-center justify-between px-4 py-3.5 border-b border-gray-50 cursor-pointer">
+            <div class="flex items-center gap-3"><span>📍</span><span class="text-sm text-gray-700">Saved Addresses</span></div>
+            <span class="text-gray-400">›</span>
+          </div>
+          <div class="flex items-center justify-between px-4 py-3.5 border-b border-gray-50 cursor-pointer">
+            <div class="flex items-center gap-3"><span>🔔</span><span class="text-sm text-gray-700">Notifications</span></div>
+            <span class="text-gray-400">›</span>
+          </div>
+          <div class="flex items-center justify-between px-4 py-3.5 border-b border-gray-50 cursor-pointer">
+            <div class="flex items-center gap-3"><span>🌐</span><span class="text-sm text-gray-700">Language: English</span></div>
+            <span class="text-gray-400">›</span>
+          </div>
+          <div class="flex items-center justify-between px-4 py-3.5 border-b border-gray-50 cursor-pointer">
+            <div class="flex items-center gap-3"><span>🔒</span><span class="text-sm text-gray-700">Privacy & Security</span></div>
+            <span class="text-gray-400">›</span>
+          </div>
+          <div class="flex items-center justify-between px-4 py-3.5 cursor-pointer">
+            <div class="flex items-center gap-3"><span>📞</span><span class="text-sm text-gray-700">Help & Support</span></div>
+            <span class="text-gray-400">›</span>
+          </div>
+        </div>
+      </div>
+      <div class="card p-4 text-center cursor-pointer">
+        <span class="text-red-500 font-medium text-sm">Sign Out</span>
+      </div>
+      <div class="text-center text-xs text-gray-400 pb-2">FixNest v1.0.0 — © 2025 FixNest Inc.</div>
+    </div>
+  </div>
+  <div class="bottom-nav">
+    <div class="flex">
+      <div onclick="goTo('home')" class="flex-1 flex flex-col items-center py-2 cursor-pointer text-gray-400">
+        <span class="text-xl">🏠</span><span class="text-xs mt-0.5">Home</span>
+      </div>
+      <div onclick="goTo('categories')" class="flex-1 flex flex-col items-center py-2 cursor-pointer text-gray-400">
+        <span class="text-xl">🔧</span><span class="text-xs mt-0.5">Services</span>
+      </div>
+      <div onclick="goTo('orders')" class="flex-1 flex flex-col items-center py-2 cursor-pointer text-gray-400">
+        <span class="text-xl">📋</span><span class="text-xs mt-0.5">Orders</span>
+      </div>
+      <div onclick="goTo('profile')" class="flex-1 flex flex-col items-center py-2 cursor-pointer text-primary">
+        <span class="text-xl">👤</span><span class="text-xs font-medium mt-0.5">Profile</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════ DATA ═══════════════════════════════════════
+const CATEGORIES = [
+  {
+    id: 'plumbing', name: 'Plumbing', icon: '🔧', color: '#2563EB',
+    desc: 'Leaks, pipes, drains, water heaters & more',
+    services: [
+      { id: 'p1', name: 'Leaky Faucet Repair', price: 89, duration: '1-2 hrs', desc: 'Fix dripping faucets in kitchen or bathroom. Includes parts & labor.', popular: true },
+      { id: 'p2', name: 'Drain Cleaning', price: 149, duration: '1-3 hrs', desc: 'Clear clogged drains in sink, shower, or bathtub using professional equipment.' },
+      { id: 'p3', name: 'Toilet Repair', price: 129, duration: '1-2 hrs', desc: 'Fix running toilet, weak flush, or leaking base. Includes all common parts.', popular: true },
+      { id: 'p4', name: 'Water Heater Repair', price: 249, duration: '2-4 hrs', desc: 'Diagnose and repair water heater issues. No heat, leaks, or strange noises.' },
+      { id: 'p5', name: 'Pipe Leak Repair', price: 199, duration: '2-5 hrs', desc: 'Locate and repair leaking pipes. Includes minor drywall patch if needed.' },
+      { id: 'p6', name: 'Garbage Disposal Install', price: 179, duration: '1-2 hrs', desc: 'Install new garbage disposal unit. Unit sold separately or we can supply.' },
+    ]
+  },
+  {
+    id: 'electrical', name: 'Electrical', icon: '⚡', color: '#D97706',
+    desc: 'Outlets, lighting, panels, EV chargers & more',
+    services: [
+      { id: 'e1', name: 'Outlet / Switch Repair', price: 79, duration: '1 hr', desc: 'Repair or replace faulty outlets, switches, or dimmers. Code-compliant work.' },
+      { id: 'e2', name: 'Light Fixture Install', price: 149, duration: '1-3 hrs', desc: 'Install ceiling lights, pendant lights, or chandeliers. Includes wiring.', popular: true },
+      { id: 'e3', name: 'Ceiling Fan Install', price: 189, duration: '2-4 hrs', desc: 'Install ceiling fan with or without existing wiring. Balancing included.' },
+      { id: 'e4', name: 'Circuit Breaker Service', price: 199, duration: '2-4 hrs', desc: 'Reset tripped breakers, replace faulty breakers, or diagnose electrical issues.' },
+      { id: 'e5', name: 'EV Charger Install', price: 599, duration: '3-6 hrs', desc: 'Install Level 2 EV charging station in garage. Permit pulled and inspected.', popular: true },
+      { id: 'e6', name: 'Panel Upgrade', price: 1499, duration: '6-10 hrs', desc: 'Upgrade electrical panel from 100A to 200A. Full permit and inspection included.' },
+    ]
+  },
+  {
+    id: 'hvac', name: 'HVAC', icon: '❄️', color: '#0891B2',
+    desc: 'AC, heating, furnace, duct cleaning & more',
+    services: [
+      { id: 'h1', name: 'AC Tune-Up', price: 99, duration: '1-2 hrs', desc: 'Annual AC maintenance: filter change, coil cleaning, refrigerant check.', popular: true },
+      { id: 'h2', name: 'AC Repair', price: 249, duration: '2-4 hrs', desc: 'Diagnose and fix AC not cooling, strange noises, or leaking issues.' },
+      { id: 'h3', name: 'Furnace Repair', price: 199, duration: '2-3 hrs', desc: 'Fix furnace not heating, strange smells, or pilot light issues.' },
+      { id: 'h4', name: 'Duct Cleaning', price: 299, duration: '3-5 hrs', desc: 'Clean all air ducts to improve air quality and system efficiency.' },
+      { id: 'h5', name: 'Thermostat Install', price: 129, duration: '1-2 hrs', desc: 'Install and configure smart thermostat (Nest, Ecobee, etc.).' },
+      { id: 'h6', name: 'Mini-Split Install', price: 899, duration: '4-8 hrs', desc: 'Install ductless mini-split AC/heat pump system. Unit pricing varies.' },
+    ]
+  },
+  {
+    id: 'roofing', name: 'Roofing', icon: '🏠', color: '#7C3AED',
+    desc: 'Leaks, shingles, gutters, inspections & more',
+    services: [
+      { id: 'r1', name: 'Roof Inspection', price: 149, duration: '1-2 hrs', desc: 'Full roof inspection with photo report. Identify leaks and damage.', popular: true },
+      { id: 'r2', name: 'Shingle Repair', price: 299, duration: '2-4 hrs', desc: 'Replace missing or damaged shingles. Up to 10 shingles included.' },
+      { id: 'r3', name: 'Roof Leak Repair', price: 399, duration: '3-5 hrs', desc: 'Find and seal roof leaks. Includes flashing repair and waterproofing.' },
+      { id: 'r4', name: 'Gutter Cleaning', price: 149, duration: '2-3 hrs', desc: 'Clean all gutters and downspouts. Flush and test water flow.', popular: true },
+      { id: 'r5', name: 'Gutter Repair', price: 199, duration: '2-4 hrs', desc: 'Fix sagging, leaking, or separated gutters. Re-pitch and reseal.' },
+    ]
+  },
+  {
+    id: 'carpentry', name: 'Carpentry', icon: '🪵', color: '#92400E',
+    desc: 'Doors, floors, drywall, cabinets & more',
+    services: [
+      { id: 'c1', name: 'Door Repair / Install', price: 149, duration: '1-3 hrs', desc: 'Fix sticking doors, broken hinges, or install new interior doors.', popular: true },
+      { id: 'c2', name: 'Drywall Repair', price: 179, duration: '2-4 hrs', desc: 'Patch holes, cracks, or water-damaged drywall. Texture matching included.' },
+      { id: 'c3', name: 'Flooring Repair', price: 199, duration: '2-5 hrs', desc: 'Fix squeaky floors, replace damaged planks, or repair tile grout.' },
+      { id: 'c4', name: 'Cabinet Repair', price: 129, duration: '1-3 hrs', desc: 'Fix broken cabinet hinges, drawer slides, or doors. Alignment included.' },
+      { id: 'c5', name: 'Deck Repair', price: 299, duration: '3-6 hrs', desc: 'Replace rotted boards, fix loose railing, or stain existing deck.' },
+    ]
+  },
+  {
+    id: 'painting', name: 'Painting', icon: '🎨', color: '#DB2777',
+    desc: 'Interior, exterior, cabinet painting & more',
+    services: [
+      { id: 'pt1', name: 'Room Painting (1 room)', price: 299, duration: '4-8 hrs', desc: 'Paint one room up to 200 sq ft. Includes primer, 2 coats, and trim.', popular: true },
+      { id: 'pt2', name: 'Exterior Touch-Up', price: 249, duration: '3-5 hrs', desc: 'Paint peeling or faded exterior areas. Color matching available.' },
+      { id: 'pt3', name: 'Cabinet Painting', price: 599, duration: '2 days', desc: 'Repaint kitchen cabinets for a fresh look. Includes sanding and priming.' },
+      { id: 'pt4', name: 'Fence Painting / Stain', price: 199, duration: '3-6 hrs', desc: 'Clean, prep, and paint or stain wooden fence. Up to 50 linear feet.' },
+    ]
+  },
+  {
+    id: 'appliances', name: 'Appliances', icon: '🏡', color: '#059669',
+    desc: 'Washer, dryer, dishwasher, oven & more',
+    services: [
+      { id: 'a1', name: 'Washer / Dryer Repair', price: 149, duration: '1-3 hrs', desc: 'Fix not spinning, not draining, loud noise, or not heating.', popular: true },
+      { id: 'a2', name: 'Dishwasher Repair', price: 129, duration: '1-2 hrs', desc: 'Fix not draining, not cleaning, leaking, or door latch issues.' },
+      { id: 'a3', name: 'Refrigerator Repair', price: 199, duration: '2-4 hrs', desc: 'Fix not cooling, ice maker issues, leaking, or compressor problems.' },
+      { id: 'a4', name: 'Oven / Range Repair', price: 149, duration: '1-3 hrs', desc: 'Fix burner, igniter, oven not heating, or control panel issues.' },
+      { id: 'a5', name: 'Microwave Repair', price: 99, duration: '1-2 hrs', desc: 'Fix not heating, sparking, turntable, or control panel issues.' },
+    ]
+  },
+  {
+    id: 'handyman', name: 'Handyman', icon: '🔨', color: '#4F46E5',
+    desc: 'Furniture assembly, TV mount, misc repairs',
+    services: [
+      { id: 'm1', name: 'TV Mounting', price: 89, duration: '1-2 hrs', desc: 'Mount flat screen TV up to 65 inches. Wall anchor and cable management included.', popular: true },
+      { id: 'm2', name: 'Furniture Assembly', price: 79, duration: '1-3 hrs', desc: 'Assemble IKEA or flatpack furniture. Rate is per hour, 1 hr minimum.' },
+      { id: 'm3', name: 'Shelf / Mirror Install', price: 79, duration: '1 hr', desc: 'Install floating shelves, mirrors, or picture frames. Includes drywall anchors.' },
+      { id: 'm4', name: 'Door Lock / Deadbolt', price: 99, duration: '1-2 hrs', desc: 'Install or replace deadbolt, smart lock, or door handle.' },
+      { id: 'm5', name: 'Caulking & Sealing', price: 99, duration: '1-2 hrs', desc: 'Re-caulk bathtub, shower, windows, or doors. Mold-resistant caulk used.' },
+      { id: 'm6', name: 'General Repairs (hourly)', price: 85, duration: 'per hour', desc: 'General fix-it tasks. Minimum 2 hours. Tell us what you need!' },
+    ]
+  },
+  {
+    id: 'landscaping', name: 'Landscaping', icon: '🌿', color: '#16A34A',
+    desc: 'Lawn care, tree trimming, irrigation & more',
+    services: [
+      { id: 'l1', name: 'Lawn Mowing', price: 65, duration: '1-2 hrs', desc: 'Mow lawn, edge borders, and blow clippings. Up to 5,000 sq ft.', popular: true },
+      { id: 'l2', name: 'Tree / Hedge Trimming', price: 149, duration: '2-4 hrs', desc: 'Trim trees up to 15 ft and hedges. Debris removal included.' },
+      { id: 'l3', name: 'Irrigation Repair', price: 149, duration: '1-3 hrs', desc: 'Fix broken sprinkler heads, valves, or controller programming.' },
+      { id: 'l4', name: 'Mulch Installation', price: 199, duration: '3-5 hrs', desc: 'Install 2-3 inch mulch layer in garden beds. Up to 200 sq ft.' },
+      { id: 'l5', name: 'Weed Control', price: 99, duration: '1-3 hrs', desc: 'Hand-pull weeds and apply pre-emergent treatment to garden beds.' },
+    ]
+  },
+  {
+    id: 'cleaning', name: 'Cleaning', icon: '🧹', color: '#0284C7',
+    desc: 'Deep cleaning, move-in/out, pressure washing',
+    services: [
+      { id: 'cl1', name: 'Standard Home Cleaning', price: 149, duration: '3-4 hrs', desc: 'Full home cleaning: kitchen, bathrooms, bedrooms, living areas. Up to 2,000 sq ft.', popular: true },
+      { id: 'cl2', name: 'Deep Cleaning', price: 249, duration: '5-8 hrs', desc: 'Thorough deep clean including inside appliances, baseboards, and windows.' },
+      { id: 'cl3', name: 'Move-In/Out Cleaning', price: 299, duration: '6-10 hrs', desc: 'Full empty-property cleaning for moving. Ideal for renters needing deposit back.' },
+      { id: 'cl4', name: 'Pressure Washing', price: 199, duration: '2-4 hrs', desc: 'Pressure wash driveway, patio, deck, or exterior walls. Up to 500 sq ft.' },
+      { id: 'cl5', name: 'Window Cleaning', price: 149, duration: '2-4 hrs', desc: 'Clean inside and outside windows. Up to 15 windows. Streak-free finish.' },
+    ]
+  },
+];
+
+const COUPONS = { 'NEW30': 30, 'SAVE20': 20, 'FIXNEST10': 10 };
+
+// ═══════════════════════════════════════ STATE ═══════════════════════════════════════
+let state = {
+  page: 'home',
+  selectedCategory: null,
+  selectedService: null,
+  bookingStep: 1,
+  selectedDate: null,
+  selectedTime: null,
+  discount: 0,
+  couponApplied: '',
+  orders: [
+    { id: 'ORD-001', service: 'Leaky Faucet Repair', category: 'Plumbing', price: 89, date: 'Jan 15, 2025', time: '10:00 AM', address: '123 Main St, San Francisco, CA 94102', status: 'completed', tech: 'Mike R.', icon: '🔧' },
+    { id: 'ORD-002', service: 'AC Tune-Up', category: 'HVAC', price: 99, date: 'Feb 3, 2025', time: '2:00 PM', address: '123 Main St, San Francisco, CA 94102', status: 'confirmed', tech: 'Sarah K.', icon: '❄️' },
+  ],
+  orderFilter: 'all',
+};
+
+// ═══════════════════════════════════════ NAVIGATION ═══════════════════════════════════════
+function goTo(page) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('page-' + page).classList.add('active');
+  state.page = page;
+  if (page === 'home') renderHome();
+  if (page === 'categories') renderCategories();
+  if (page === 'orders') renderOrders();
+  if (page === 'profile') document.getElementById('stat-orders').textContent = state.orders.length;
+}
+
+function openCategory(catId) {
+  state.selectedCategory = CATEGORIES.find(c => c.id === catId);
+  renderCategoryDetail();
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('page-category-detail').classList.add('active');
+}
+
+function openBooking(serviceId) {
+  const service = state.selectedCategory.services.find(s => s.id === serviceId);
+  state.selectedService = service;
+  state.bookingStep = 1;
+  state.selectedDate = null;
+  state.selectedTime = null;
+  state.discount = 0;
+  state.couponApplied = '';
+  renderBooking();
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('page-booking').classList.add('active');
+}
+
+// ═══════════════════════════════════════ RENDER HOME ═══════════════════════════════════════
+function renderHome() {
+  const grid = document.getElementById('home-categories');
+  grid.innerHTML = CATEGORIES.slice(0, 8).map(c => `
+    <div onclick="openCategory('${c.id}')" class="flex flex-col items-center gap-1.5 cursor-pointer">
+      <div class="w-14 h-14 rounded-2xl flex items-center justify-center text-2xl shadow-sm" style="background:${c.color}20">
+        ${c.icon}
+      </div>
+      <div class="text-gray-700 text-xs text-center font-medium leading-tight">${c.name}</div>
+    </div>
+  `).join('');
+
+  // Recent orders
+  if (state.orders.length > 0) {
+    document.getElementById('recent-orders-section').style.display = 'block';
+    document.getElementById('recent-orders-list').innerHTML = state.orders.slice(0,1).map(o => `
+      <div class="card p-4 flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl flex items-center justify-center text-xl" style="background:#EFF6FF">${o.icon}</div>
+        <div class="flex-1">
+          <div class="font-semibold text-gray-800 text-sm">${o.service}</div>
+          <div class="text-gray-500 text-xs">${o.date} · ${o.time}</div>
+        </div>
+        <div class="px-2 py-1 rounded-full text-xs font-medium ${statusClass(o.status)}">${capitalizeFirst(o.status)}</div>
+      </div>
+    `).join('');
+  }
+}
+
+// ═══════════════════════════════════════ RENDER CATEGORIES ═══════════════════════════════════════
+function renderCategories() {
+  document.getElementById('categories-grid').innerHTML = CATEGORIES.map(c => `
+    <div onclick="openCategory('${c.id}')" class="card p-4 flex items-center gap-4 cursor-pointer active:bg-gray-50 mb-3">
+      <div class="w-14 h-14 rounded-2xl flex items-center justify-center text-3xl flex-shrink-0" style="background:${c.color}15">
+        ${c.icon}
+      </div>
+      <div class="flex-1">
+        <div class="font-semibold text-gray-800">${c.name}</div>
+        <div class="text-gray-500 text-xs mt-0.5">${c.desc}</div>
+        <div class="text-xs mt-1" style="color:${c.color}">${c.services.length} services</div>
+      </div>
+      <div class="text-gray-300 text-lg">›</div>
+    </div>
+  `).join('');
+}
+
+// ═══════════════════════════════════════ RENDER CATEGORY DETAIL ═══════════════════════════════════════
+function renderCategoryDetail() {
+  const cat = state.selectedCategory;
+  const header = document.getElementById('category-detail-header');
+  header.style.background = `linear-gradient(135deg, ${cat.color} 0%, ${cat.color}BB 100%)`;
+  document.getElementById('cat-detail-title').textContent = cat.icon + ' ' + cat.name;
+  document.getElementById('cat-detail-desc').textContent = cat.desc;
+
+  document.getElementById('services-list').innerHTML = cat.services.map(s => `
+    <div class="card p-4 slide-up">
+      <div class="flex items-start justify-between gap-3">
+        <div class="flex-1">
+          <div class="flex items-center gap-2">
+            <div class="font-semibold text-gray-800">${s.name}</div>
+            ${s.popular ? '<span class="tag text-xs">Popular</span>' : ''}
+          </div>
+          <div class="text-gray-500 text-xs mt-1">${s.desc}</div>
+          <div class="flex items-center gap-3 mt-2">
+            <span class="text-xs text-gray-400">⏱ ${s.duration}</span>
+          </div>
+        </div>
+        <div class="flex flex-col items-end gap-2 flex-shrink-0">
+          <div class="font-bold text-gray-800 text-lg">$${s.price}</div>
+          <button onclick="openBooking('${s.id}')" class="bg-primary text-white rounded-xl px-4 py-2 text-sm font-semibold">Book</button>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+// ═══════════════════════════════════════ RENDER BOOKING ═══════════════════════════════════════
+function renderBooking() {
+  const s = state.selectedService;
+  const cat = state.selectedCategory;
+
+  // Back button
+  document.getElementById('booking-back').onclick = () => {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.getElementById('page-category-detail').classList.add('active');
+  };
+
+  // Service summary
+  document.getElementById('booking-service-summary').innerHTML = `
+    <div class="card p-3 flex items-center gap-3">
+      <div class="w-10 h-10 rounded-xl flex items-center justify-center text-xl flex-shrink-0" style="background:${cat.color}15">${cat.icon}</div>
+      <div class="flex-1">
+        <div class="font-semibold text-gray-800 text-sm">${s.name}</div>
+        <div class="text-gray-500 text-xs">${cat.name} · ⏱ ${s.duration}</div>
+      </div>
+      <div class="font-bold text-gray-800">$${s.price}</div>
+    </div>
+  `;
+
+  // Date picker
+  const dates = [];
+  const today = new Date();
+  for (let i = 1; i <= 7; i++) {
+    const d = new Date(today);
+    d.setDate(today.getDate() + i);
+    dates.push(d);
+  }
+  const days = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  document.getElementById('date-picker').innerHTML = dates.map((d, i) => `
+    <div onclick="selectDate('${d.toDateString()}', this)" class="flex flex-col items-center p-3 rounded-2xl border-2 border-gray-100 cursor-pointer flex-shrink-0 ${i === 0 ? 'border-primary bg-primary text-white' : 'bg-white'}" style="min-width:64px">
+      <div class="text-xs font-medium">${days[d.getDay()]}</div>
+      <div class="text-lg font-bold">${d.getDate()}</div>
+      <div class="text-xs">${months[d.getMonth()]}</div>
+    </div>
+  `).join('');
+  if (dates.length) {
+    state.selectedDate = dates[0].toDateString();
+    document.querySelectorAll('#date-picker > div')[0].classList.add('border-primary', 'bg-primary', 'text-white');
+  }
+
+  // Time picker
+  const times = ['8:00 AM','9:00 AM','10:00 AM','11:00 AM','1:00 PM','2:00 PM','3:00 PM','4:00 PM','5:00 PM'];
+  document.getElementById('time-picker').innerHTML = times.map((t, i) => `
+    <div onclick="selectTime('${t}', this)" class="p-2 text-center rounded-xl border-2 border-gray-100 cursor-pointer text-sm font-medium ${i === 0 ? 'border-primary bg-primary text-white' : 'bg-white text-gray-700'}">
+      ${t}
+    </div>
+  `).join('');
+  if (times.length) state.selectedTime = times[0];
+}
+
+function selectDate(dateStr, el) {
+  state.selectedDate = dateStr;
+  document.querySelectorAll('#date-picker > div').forEach(d => {
+    d.classList.remove('border-primary', 'bg-primary', 'text-white');
+    d.classList.add('border-gray-100', 'bg-white');
+  });
+  el.classList.remove('border-gray-100', 'bg-white');
+  el.classList.add('border-primary', 'bg-primary', 'text-white');
+}
+
+function selectTime(t, el) {
+  state.selectedTime = t;
+  document.querySelectorAll('#time-picker > div').forEach(d => {
+    d.classList.remove('border-primary', 'bg-primary', 'text-white');
+    d.classList.add('border-gray-100', 'bg-white', 'text-gray-700');
+  });
+  el.classList.remove('border-gray-100', 'bg-white', 'text-gray-700');
+  el.classList.add('border-primary', 'bg-primary', 'text-white');
+}
+
+// ═══════════════════════════════════════ BOOKING STEPS ═══════════════════════════════════════
+function nextStep() {
+  if (state.bookingStep === 1) {
+    document.getElementById('booking-step1').style.display = 'none';
+    document.getElementById('booking-step2').style.display = 'block';
+    document.getElementById('step2-circle').classList.remove('step-inactive'); document.getElementById('step2-circle').classList.add('step-active');
+    document.getElementById('step2-label').classList.remove('text-gray-400'); document.getElementById('step2-label').classList.add('text-primary', 'font-medium');
+    state.bookingStep = 2;
+  } else if (state.bookingStep === 2) {
+    const addr = document.getElementById('addr-street').value || '123 Main St';
+    const city = document.getElementById('addr-city').value || 'San Francisco';
+    const zip = document.getElementById('addr-zip').value || '94102';
+    document.getElementById('booking-step2').style.display = 'none';
+    document.getElementById('booking-step3').style.display = 'block';
+    document.getElementById('step3-circle').classList.remove('step-inactive'); document.getElementById('step3-circle').classList.add('step-active');
+    document.getElementById('step3-label').classList.remove('text-gray-400'); document.getElementById('step3-label').classList.add('text-primary', 'font-medium');
+    state.bookingStep = 3;
+    renderConfirmSummary(addr, city, zip);
+  }
+}
+
+function renderConfirmSummary(addr, city, zip) {
+  const s = state.selectedService;
+  const cat = state.selectedCategory;
+  document.getElementById('confirm-summary').innerHTML = `
+    <div class="flex flex-col gap-2 text-sm">
+      <div class="flex justify-between"><span class="text-gray-500">Service</span><span class="font-medium">${s.name}</span></div>
+      <div class="flex justify-between"><span class="text-gray-500">Category</span><span class="font-medium">${cat.name}</span></div>
+      <div class="flex justify-between"><span class="text-gray-500">Date</span><span class="font-medium">${state.selectedDate}</span></div>
+      <div class="flex justify-between"><span class="text-gray-500">Time</span><span class="font-medium">${state.selectedTime}</span></div>
+      <div class="flex justify-between"><span class="text-gray-500">Address</span><span class="font-medium text-right">${addr}, ${city}, CA ${zip}</span></div>
+    </div>
+  `;
+  updatePriceSummary();
+}
+
+function updatePriceSummary() {
+  const s = state.selectedService;
+  const tax = Math.round(s.price * 0.0875 * 100) / 100;
+  const total = s.price - state.discount + tax;
+  document.getElementById('price-summary').innerHTML = `
+    <div class="flex flex-col gap-2 text-sm">
+      <div class="flex justify-between"><span class="text-gray-500">Service Fee</span><span>$${s.price}</span></div>
+      ${state.discount > 0 ? `<div class="flex justify-between text-green-600"><span>Coupon (${state.couponApplied})</span><span>-$${state.discount}</span></div>` : ''}
+      <div class="flex justify-between"><span class="text-gray-500">Tax (8.75%)</span><span>$${tax.toFixed(2)}</span></div>
+      <div class="border-t border-gray-100 pt-2 flex justify-between font-bold"><span>Total</span><span>$${total.toFixed(2)}</span></div>
+    </div>
+  `;
+}
+
+function applyCoupon() {
+  const code = document.getElementById('coupon-input').value.toUpperCase().trim();
+  const msg = document.getElementById('coupon-msg');
+  msg.style.display = 'block';
+  if (COUPONS[code]) {
+    state.discount = COUPONS[code];
+    state.couponApplied = code;
+    msg.className = 'text-sm mt-2 text-green-600';
+    msg.textContent = `✅ Coupon applied! You save $${state.discount}`;
+    updatePriceSummary();
+  } else {
+    msg.className = 'text-sm mt-2 text-red-500';
+    msg.textContent = '❌ Invalid coupon code';
+  }
+}
+
+function confirmBooking() {
+  const s = state.selectedService;
+  const cat = state.selectedCategory;
+  const orderId = 'ORD-' + String(Date.now()).slice(-5);
+  const addr = (document.getElementById('addr-street').value || '123 Main St') + ', ' +
+               (document.getElementById('addr-city').value || 'San Francisco') + ', CA ' +
+               (document.getElementById('addr-zip').value || '94102');
+  const newOrder = {
+    id: orderId, service: s.name, category: cat.name, price: s.price,
+    date: state.selectedDate, time: state.selectedTime, address: addr,
+    status: 'pending', tech: 'Assigning...', icon: cat.icon,
+  };
+  state.orders.unshift(newOrder);
+
+  document.getElementById('success-summary').innerHTML = `
+    <div class="flex flex-col gap-2 text-sm">
+      <div class="flex justify-between font-bold text-gray-800 mb-1"><span>${s.name}</span><span>$${s.price}</span></div>
+      <div class="flex justify-between text-gray-500"><span>Order ID</span><span>${orderId}</span></div>
+      <div class="flex justify-between text-gray-500"><span>Date</span><span>${state.selectedDate}</span></div>
+      <div class="flex justify-between text-gray-500"><span>Time</span><span>${state.selectedTime}</span></div>
+    </div>
+  `;
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('page-success').classList.add('active');
+}
+
+// ═══════════════════════════════════════ RENDER ORDERS ═══════════════════════════════════════
+function filterOrders(filter) {
+  state.orderFilter = filter;
+  ['all','pending','confirmed','completed'].forEach(f => {
+    const btn = document.getElementById('tab-' + f);
+    if (f === filter) {
+      btn.className = 'px-4 py-1.5 rounded-full text-sm font-medium bg-primary text-white whitespace-nowrap';
+    } else {
+      btn.className = 'px-4 py-1.5 rounded-full text-sm font-medium bg-gray-100 text-gray-600 whitespace-nowrap';
+    }
+  });
+  renderOrders();
+}
+
+function renderOrders() {
+  const filtered = state.orderFilter === 'all'
+    ? state.orders
+    : state.orders.filter(o => o.status === state.orderFilter);
+
+  if (filtered.length === 0) {
+    document.getElementById('orders-list').innerHTML = `
+      <div class="text-center py-16">
+        <div class="text-5xl mb-4">📋</div>
+        <div class="text-gray-500 font-medium">No orders yet</div>
+        <div class="text-gray-400 text-sm mt-1">Book a service to get started</div>
+        <button onclick="goTo('categories')" class="btn-primary mt-6" style="width:auto;padding:10px 24px">Browse Services</button>
+      </div>
+    `;
+    return;
+  }
+
+  document.getElementById('orders-list').innerHTML = filtered.map(o => `
+    <div class="card p-4 mb-3">
+      <div class="flex items-start gap-3">
+        <div class="w-10 h-10 rounded-xl flex items-center justify-center text-xl flex-shrink-0 bg-blue-50">${o.icon}</div>
+        <div class="flex-1">
+          <div class="flex items-center justify-between">
+            <div class="font-semibold text-gray-800 text-sm">${o.service}</div>
+            <div class="text-xs px-2 py-0.5 rounded-full font-medium ${statusClass(o.status)}">${capitalizeFirst(o.status)}</div>
+          </div>
+          <div class="text-xs text-gray-500 mt-0.5">${o.category}</div>
+          <div class="text-xs text-gray-400 mt-1">📅 ${o.date} · ${o.time}</div>
+          <div class="text-xs text-gray-400">📍 ${o.address}</div>
+          <div class="flex items-center justify-between mt-2">
+            <div class="text-xs text-gray-500">👨‍🔧 ${o.tech}</div>
+            <div class="font-bold text-gray-800 text-sm">$${o.price}</div>
+          </div>
+        </div>
+      </div>
+      ${o.status === 'completed' ? `
+        <div class="mt-3 pt-3 border-t border-gray-50 flex gap-2">
+          <button class="flex-1 border border-primary text-primary rounded-xl py-2 text-xs font-semibold">⭐ Rate Service</button>
+          <button class="flex-1 bg-primary text-white rounded-xl py-2 text-xs font-semibold" onclick="openCategory('${CATEGORIES[0].id}')">📅 Book Again</button>
+        </div>
+      ` : ''}
+      ${o.status === 'pending' ? `
+        <div class="mt-3 pt-3 border-t border-gray-50">
+          <button class="w-full border border-red-200 text-red-500 rounded-xl py-2 text-xs font-semibold">Cancel Order</button>
+        </div>
+      ` : ''}
+    </div>
+  `).join('');
+}
+
+// ═══════════════════════════════════════ UTILS ═══════════════════════════════════════
+function statusClass(status) {
+  const map = { pending: 'status-pending', confirmed: 'status-confirmed', completed: 'status-completed', cancelled: 'status-cancelled' };
+  return map[status] || 'bg-gray-100 text-gray-600';
+}
+function capitalizeFirst(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
+function copyReferral() {
+  navigator.clipboard.writeText('FIXNEST-JS2024').then(() => alert('Referral code copied! 🎉'));
+}
+
+// ═══════════════════════════════════════ INIT ═══════════════════════════════════════
+renderHome();
+</script>
+</body>
+</html>
