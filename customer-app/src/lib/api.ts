@@ -1,4 +1,4 @@
-const BASE = 'http://localhost:4000/api'
+const BASE = import.meta.env.VITE_API_URL || 'https://omnifix-production.up.railway.app/api'
 
 function getToken() {
   return localStorage.getItem('fixnest_token')
