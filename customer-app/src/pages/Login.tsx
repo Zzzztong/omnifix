@@ -17,6 +17,7 @@ export default function Login() {
     setError('')
     if (!email || !password) return setError('请填写邮箱和密码')
     if (tab === 'register' && !name) return setError('请填写姓名')
+    if (tab === 'register' && !phone) return setError('请填写手机号码')
     setLoading(true)
     try {
       if (tab === 'login') {
@@ -75,7 +76,7 @@ export default function Login() {
             style={{ boxSizing: 'border-box' }} />
           {tab === 'register' && (
             <input value={phone} onChange={e => setPhone(e.target.value)}
-              placeholder="手机号码（选填）" type="tel"
+              placeholder="手机号码" type="tel"
               className="w-full border border-gray-200 rounded-2xl px-4 py-3.5 text-sm outline-none"
               style={{ boxSizing: 'border-box' }} />
           )}

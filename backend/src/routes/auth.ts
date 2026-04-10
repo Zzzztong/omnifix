@@ -9,7 +9,7 @@ const router = Router()
 // 注册
 router.post('/register', async (req, res) => {
   const { name, email, phone, password } = req.body
-  if (!name || !email || !password) return res.status(400).json({ error: '请填写完整信息' })
+  if (!name || !email || !password || !phone) return res.status(400).json({ error: '请填写完整信息（姓名、邮箱、手机号、密码）' })
   const exists = await prisma.user.findUnique({ where: { email } })
   if (exists) return res.status(400).json({ error: '邮箱已注册' })
   const hashed = await bcrypt.hash(password, 10)

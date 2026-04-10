@@ -373,7 +373,8 @@ export default function Orders() {
 
   const exportCSV = () => {
     const token = localStorage.getItem('admin_token')
-    const url = `http://localhost:4000/api/orders/export/csv${filter !== 'all' ? '?status=' + filter : ''}`
+    const base = import.meta.env.VITE_API_URL || 'https://omnifix-production.up.railway.app/api'
+    const url = `${base}/orders/export/csv${filter !== 'all' ? '?status=' + filter : ''}`
     const a = document.createElement('a')
     a.href = url
     // pass token via fetch and create blob
