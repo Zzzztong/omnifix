@@ -3,6 +3,17 @@ import { api } from '../lib/api'
 
 const EMPTY_FORM = { name: '', catId: '', price: '', duration: '', desc: '', popular: false }
 
+async function toggleActive(type: 'service' | 'category', id: string, current: boolean, update: (id: string, active: boolean) => void) {
+  try {
+    if (type === 'service') {
+      await import('../lib/api').then(m => m.api.updateService(id, { active: !current }))
+    } else {
+      await import('../lib/api').then(m => m.api.updateCategory(id, { active: !current }))
+    }
+    update(id, !current)
+  } catch (e: any) { alert(e.message) }
+}
+
 export default function Services() {
   const [tab, setTab] = useState<'cats' | 'items'>('cats')
   const [categories, setCategories] = useState<any[]>([])
@@ -99,9 +110,16 @@ export default function Services() {
                       {(c.services || []).length} 项
                     </td>
                     <td className="px-4 py-4">
-                      <span className={`text-xs px-2.5 py-1 rounded-full font-medium ${c.active ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
-                        {c.active ? '上线' : '下线'}
-                      </span>
+                      <button
+                        onClick={() => toggleActive('category', c.id, c.active, (id, val) =>
+                          setCategories(prev => prev.map(x => x.id === id ? { ...x, active: val } : x))
+                        )}
+                        className="text-xs px-2.5 py-1 rounded-full font-medium cursor-pointer border-none transition-all"
+                        style={c.active
+                          ? { background: '#DCFCE7', color: '#15803D' }
+                          : { background: '#F1F5F9', color: '#64748B' }}>
+                        {c.active ? '✓ 上线' : '○ 下线'}
+                      </button>
                     </td>
                   </tr>
                 )
@@ -146,9 +164,16 @@ export default function Services() {
                       {s.popular ? <span className="text-yellow-500 text-sm">⭐ 热门</span> : <span className="text-gray-300">—</span>}
                     </td>
                     <td className="px-4 py-3">
-                      <span className={`text-xs px-2.5 py-1 rounded-full font-medium ${s.active ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
-                        {s.active ? '上线' : '下线'}
-                      </span>
+                      <button
+                        onClick={() => toggleActive('service', s.id, s.active, (id, val) =>
+                          setServices(prev => prev.map(x => x.id === id ? { ...x, active: val } : x))
+                        )}
+                        className="text-xs px-2.5 py-1 rounded-full font-medium cursor-pointer border-none transition-all"
+                        style={s.active
+                          ? { background: '#DCFCE7', color: '#15803D' }
+                          : { background: '#F1F5F9', color: '#64748B' }}>
+                        {s.active ? '✓ 上线' : '○ 下线'}
+                      </button>
                     </td>
                   </tr>
                 ))}
