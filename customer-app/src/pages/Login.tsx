@@ -37,9 +37,9 @@ export default function Login() {
 
   return (
     <div className="min-h-screen flex flex-col" style={{ background: `linear-gradient(160deg, ${BRAND_DARK} 0%, ${BRAND} 45%, #FFF7ED 45%)` }}>
-      <div className="px-6 pt-14 pb-6 text-white relative">
+      <div className="px-6 pt-12 pb-6 text-white">
         <button onClick={() => navigate(-1)}
-          className="absolute top-12 left-4 w-9 h-9 flex items-center justify-center rounded-full border-none cursor-pointer"
+          className="w-9 h-9 flex items-center justify-center rounded-full border-none cursor-pointer mb-6"
           style={{ background: 'rgba(255,255,255,0.2)' }}>
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
             <polyline points="15 18 9 12 15 6"/>

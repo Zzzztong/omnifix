@@ -88,12 +88,18 @@ export default function Home() {
         </div>
 
         {/* Search */}
-        <button onClick={() => navigate('/categories')}
-          className="w-full flex items-center gap-3 rounded-2xl px-4 py-3 cursor-pointer border-none text-left"
+        <div className="relative flex items-center rounded-2xl px-4 py-3"
           style={{ background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.08)' }}>
-          {Ic.search}
-          <span className="text-sm" style={{ color: '#6B7280' }}>搜索服务，例如：水管漏水、空调维修</span>
-        </button>
+          <span className="flex-shrink-0 mr-3">{Ic.search}</span>
+          <input
+            type="text"
+            placeholder="搜索服务，例如：水管漏水、空调维修"
+            className="flex-1 bg-transparent border-none outline-none text-sm"
+            style={{ color: 'white', caretColor: '#F97316' }}
+            onKeyDown={e => { if (e.key === 'Enter') navigate('/categories') }}
+            onFocus={e => (e.target.style.color = 'white')}
+          />
+        </div>
       </div>
 
       <div className="px-4 pt-4 space-y-5">
