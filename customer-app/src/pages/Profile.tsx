@@ -66,21 +66,21 @@ export default function Profile() {
   ]
 
   return (
-    <div className="pb-28" style={{ background: '#F5F5F7' }}>
+    <div className="pb-28" style={{ background: '#F8FAFC' }}>
       {/* Header */}
-      <div style={{ background: '#0A0A0A' }} className="px-4 pt-14 pb-6">
+      <div className="px-4 pt-14 pb-5" style={{ background: 'white', borderBottom: '1px solid #F1F5F9' }}>
         <div className="flex items-center gap-4">
           <div className="w-14 h-14 rounded-2xl flex items-center justify-center text-2xl font-bold text-white flex-shrink-0"
             style={{ background: `linear-gradient(135deg, ${BRAND} 0%, #C2410C 100%)` }}>
             {initial}
           </div>
           <div className="flex-1 min-w-0">
-            <div className="text-white font-bold text-xl leading-tight">{user?.name?.split(' ')[0] || '用户'}</div>
-            <div className="text-sm mt-0.5 truncate" style={{ color: '#6B7280' }}>
+            <div className="font-bold text-xl leading-tight" style={{ color: '#0F172A' }}>{user?.name?.split(' ')[0] || '用户'}</div>
+            <div className="text-sm mt-0.5 truncate" style={{ color: '#64748B' }}>
               {user?.phone || (user?.email?.includes('@omnifix.internal') ? '' : user?.email)}
             </div>
             {memberSince && (
-              <div className="text-xs mt-0.5" style={{ color: '#4B5563' }}>会员自 {memberSince}</div>
+              <div className="text-xs mt-0.5" style={{ color: '#94A3B8' }}>会员自 {memberSince}</div>
             )}
           </div>
         </div>
@@ -88,15 +88,15 @@ export default function Profile() {
 
       <div className="px-4 pt-4 space-y-3">
         {/* Referral card */}
-        <div className="rounded-2xl overflow-hidden" style={{ background: '#111111' }}>
+        <div className="rounded-2xl overflow-hidden" style={{ background: 'linear-gradient(135deg, #FFF7ED 0%, #FFEDD5 100%)', border: '1px solid #FED7AA' }}>
           <div className="p-4">
             <div className="flex items-center gap-2 mb-3">
               {Ic.gift}
-              <span className="text-white font-semibold text-sm">邀请好友，各得 $20</span>
+              <span className="font-semibold text-sm" style={{ color: '#9A3412' }}>邀请好友，各得 $20</span>
             </div>
             <div className="flex items-center gap-2.5 rounded-xl p-3"
-              style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.08)' }}>
-              <span className="font-mono font-bold text-xl flex-1" style={{ color: '#FB923C', letterSpacing: 2 }}>
+              style={{ background: 'white', border: '1px solid #FED7AA' }}>
+              <span className="font-mono font-bold text-xl flex-1" style={{ color: BRAND, letterSpacing: 2 }}>
                 {user?.referralCode || '—'}
               </span>
               <button onClick={copyCode}
@@ -105,7 +105,7 @@ export default function Profile() {
                 {Ic.copy} 复制
               </button>
             </div>
-            <div className="text-xs mt-2" style={{ color: '#4B5563' }}>好友首单完成后奖励立即到账</div>
+            <div className="text-xs mt-2" style={{ color: '#C2410C' }}>好友首单完成后奖励立即到账</div>
           </div>
         </div>
 

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { api } from '../lib/api'
+import { CatIcon } from './Home'
 
 const GROUP_META: Record<string, { label: string; sub: string; color: string; bg: string }> = {
   urgent:  { label: '水电暖气', sub: '安全优先', color: '#DC2626', bg: '#FEF2F2' },
@@ -20,7 +21,7 @@ export default function Categories() {
   }, [])
 
   return (
-    <div className="pb-28">
+    <div className="pb-28" style={{ background: '#F8FAFC' }}>
       {/* Header */}
       <div className="sticky top-0 z-10 px-4 pt-14 pb-3"
         style={{ background: 'white', borderBottom: '1px solid #F1F5F9' }}>
@@ -73,9 +74,9 @@ export default function Categories() {
                         className="flex items-center gap-4 p-4 rounded-2xl cursor-pointer active:opacity-80 transition-opacity"
                         style={{ background: 'white', boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}>
                         {/* Icon */}
-                        <div className="w-13 h-13 rounded-2xl flex items-center justify-center text-3xl flex-shrink-0"
+                        <div className="rounded-2xl flex items-center justify-center flex-shrink-0"
                           style={{ background: (cat.color || BRAND) + '14', width: 52, height: 52 }}>
-                          {cat.icon}
+                          <CatIcon catId={cat.id} color={cat.color || BRAND} size={26} />
                         </div>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2 mb-0.5">

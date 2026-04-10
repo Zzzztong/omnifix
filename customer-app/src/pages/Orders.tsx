@@ -45,7 +45,7 @@ export default function Orders() {
   })
 
   return (
-    <div className="pb-28" style={{ background: '#F5F5F7' }}>
+    <div className="pb-28" style={{ background: '#F8FAFC' }}>
       {/* Sticky header */}
       <div className="sticky top-0 z-10" style={{ background: 'white', borderBottom: '1px solid #F1F5F9' }}>
         <div className="px-4 pt-14 pb-0">
